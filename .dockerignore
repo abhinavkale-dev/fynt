@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Node / package manager
+node_modules
+.pnpm-store
+
+# Build artifacts
+.turbo
+.next
+.next-build
+dist
+build
+coverage
+out
+
+# Local env and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+apps/web/.env
+apps/worker/.env
+apps/realtime/.env
+
+# Logs / temp
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# Tooling/editor
+.vscode
+.idea

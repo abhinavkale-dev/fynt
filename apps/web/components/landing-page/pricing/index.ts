@@ -1,0 +1,1 @@
+export { PricingSection } from './PricingSection';

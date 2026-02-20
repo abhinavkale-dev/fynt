@@ -1,0 +1,54 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "globalEnv": [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "DISCORD_WEBHOOK_URL",
+    "ENCRYPTION_KEY",
+    "NODE_ENV",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "NGROK_URL",
+    "FYNT_RUNTIME_MODE",
+    "NEXT_PUBLIC_FYNT_RUNTIME_MODE",
+    "EXECUTION_WS_URL",
+    "NEXT_PUBLIC_EXECUTION_WS_URL",
+    "EXECUTION_STREAM_SIGNING_SECRET",
+    "REALTIME_HOST",
+    "REALTIME_PORT",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "REDIS_URL",
+    "UPSTASH_REDIS_URL",
+    "REDIS_HOST",
+    "WEBHOOK_IP_RATE_LIMIT_PER_MINUTE",
+    "WEBHOOK_ENDPOINT_RATE_LIMIT_PER_MINUTE",
+    "WEBHOOK_MAX_BODY_BYTES",
+    "NEXT_DIST_DIR"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".next-build/**",
+        "!.next-build/cache/**",
+        "dist/**"
+      ]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
+    }
+  }
+}

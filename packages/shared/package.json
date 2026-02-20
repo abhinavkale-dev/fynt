@@ -1,0 +1,73 @@
+{
+  "name": "@repo/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./crypto": {
+      "types": "./src/security/crypto.ts",
+      "default": "./src/security/crypto.ts"
+    },
+    "./parser": {
+      "types": "./src/core/parser.ts",
+      "default": "./src/core/parser.ts"
+    },
+    "./redis": {
+      "types": "./src/runtime/redis.ts",
+      "default": "./src/runtime/redis.ts"
+    },
+    "./queue": {
+      "types": "./src/runtime/queue.ts",
+      "default": "./src/runtime/queue.ts"
+    },
+    "./automation-flags": {
+      "types": "./src/runtime/automationFlags.ts",
+      "default": "./src/runtime/automationFlags.ts"
+    },
+    "./run-reservation-lock": {
+      "types": "./src/runtime/runReservationLock.ts",
+      "default": "./src/runtime/runReservationLock.ts"
+    },
+    "./execution-stream-token": {
+      "types": "./src/runtime/executionStreamToken.ts",
+      "default": "./src/runtime/executionStreamToken.ts"
+    },
+    "./ssrf": {
+      "types": "./src/security/ssrf.ts",
+      "default": "./src/security/ssrf.ts"
+    },
+    "./nodeRegistry": {
+      "types": "./src/registry/nodeRegistry.ts",
+      "default": "./src/registry/nodeRegistry.ts"
+    }
+  },
+  "dependencies": {
+    "bullmq": "^5.23.5",
+    "ioredis": "^5.4.2"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "^5.0.0"
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

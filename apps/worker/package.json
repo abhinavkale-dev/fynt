@@ -1,0 +1,29 @@
+{
+  "name": "@fynt/worker",
+  "version": "1.0.0",
+  "description": "Fynt Worker - Background processor for workflow execution",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@repo/prisma": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "bullmq": "^5.23.5",
+    "dotenv": "^17.2.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

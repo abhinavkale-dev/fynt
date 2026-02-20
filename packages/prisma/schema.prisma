@@ -1,0 +1,210 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "./generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String         @id
+  name            String
+  email           String         @unique
+  emailVerified   Boolean        @default(false)
+  image           String?
+  plan            String         @default("free")
+  monthlyRunLimit Int            @default(1000)
+  maxConcurrent   Int            @default(2)
+  paidUntil       DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  workflows       Workflow[]
+  credentials     Credentials[]
+  usageRecords    UsageRecord[]
+  sessions        Session[]
+  accounts        Account[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String   @id
+  accountId         String
+  providerId        String
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken       String?
+  refreshToken      String?
+  idToken           String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope             String?
+  password          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([providerId, accountId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier, createdAt])
+  @@index([expiresAt])
+}
+
+model Workflow {
+  id           String        @id @default(uuid())
+  title        String        @default("Workflow")
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id])
+  trigger      Trigger?
+  actions      Action[]
+  runs         WorkflowRun[]
+  nodes        Json          @default("[]")
+  edges        Json          @default("[]")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model Trigger {
+  id                  String            @id @default(uuid())
+  workflowId          String            @unique
+  workflow            Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  availableTriggerId  String
+  type                AvailableTrigger  @relation(fields: [availableTriggerId], references: [id])
+  metadata            Json              @default("{}")
+}
+
+model AvailableTrigger {
+  id       String    @id
+  name     String
+  image    String
+  triggers Trigger[]
+}
+
+model Action {
+  id                 String           @id @default(uuid())
+  workflowId         String
+  workflow           Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  availableActionId  String
+  type               AvailableAction  @relation(fields: [availableActionId], references: [id])
+  sortingOrder       Int              @default(0)
+  metadata           Json             @default("{}")
+}
+
+model AvailableAction {
+  id      String   @id
+  name    String
+  image   String
+  actions Action[]
+}
+
+model Credentials {
+  id        String   @id @default(uuid())
+  title     String
+  platform  Platform
+  keys      Json     @default("{}")
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, platform, updatedAt])
+}
+
+model WorkflowRun {
+  id            String             @id @default(uuid())
+  workflowId    String
+  workflow      Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  metadata      Json               @default("{}")
+  status        WorkflowStatus     @default(Pending)
+  errorMetadata Json?
+  createdAt     DateTime           @default(now())
+  finishedAt    DateTime?
+  lockedAt      DateTime?
+  lockedBy      String?
+  nodeRuns      NodeRun[]
+
+  @@index([workflowId, createdAt])
+  @@index([workflowId, status, createdAt])
+  @@index([status, workflowId])
+}
+
+model NodeRun {
+  id            String       @id @default(uuid())
+  workflowRunId String
+  nodeId        String
+  nodeType      String
+  status        NodeStatus   @default(Pending)
+  input         Json?
+  output        Json?
+  error         String?
+  retryCount    Int          @default(0)
+  startedAt     DateTime     @default(now())
+  completedAt   DateTime?
+  
+  workflowRun   WorkflowRun  @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+  
+  @@unique([workflowRunId, nodeId])
+  @@index([workflowRunId])
+  @@index([workflowRunId, startedAt])
+  @@index([status])
+}
+
+enum Platform {
+  telegram
+  slack
+  openai
+  discord
+  anthropic
+  gemini
+  github
+  google
+  notion
+}
+
+model UsageRecord {
+  id        String @id @default(uuid())
+  userId    String
+  month     String
+  runCount  Int    @default(0)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+}
+
+enum WorkflowStatus {
+  Pending
+  Success
+  Failure
+}
+
+enum NodeStatus {
+  Pending
+  Running
+  Success
+  Failed
+  Skipped
+}

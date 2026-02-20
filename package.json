@@ -1,0 +1,32 @@
+{
+  "name": "fynt",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "start": "pnpm --filter @fynt/web start",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types",
+    "db:generate": "pnpm --filter @repo/prisma generate",
+    "db:push": "pnpm --filter @repo/prisma push",
+    "db:seed": "pnpm --filter @repo/prisma seed",
+    "db:hard-delete-airtable-email": "pnpm --filter @repo/prisma exec tsx src/hard-delete-airtable-email.ts"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "prisma": "^7.0.0",
+    "tsx": "^4.19.0",
+    "turbo": "^2.6.1",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "dependencies": {
+    "@prisma/client": "^7.0.0",
+    "unique-names-generator": "^4.7.1"
+  }
+}

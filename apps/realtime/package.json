@@ -1,0 +1,23 @@
+{
+  "name": "@fynt/realtime",
+  "version": "0.1.0",
+  "description": "Fynt realtime websocket relay for execution events",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "dotenv": "^17.2.2",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.0.0"
+  }
+}
