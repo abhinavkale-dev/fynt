@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/Provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_APP_URL ??
@@ -70,6 +71,7 @@ export default function RootLayout({ children, }: Readonly<{
         <TRPCProvider>
           {children}
         </TRPCProvider>
+        <Analytics />
       </body>
     </html>);
 }
