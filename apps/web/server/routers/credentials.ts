@@ -60,7 +60,7 @@ const create = protectedProcedure
         "github",
         "notion",
     ]),
-    keys: z.record(z.any()),
+    keys: z.record(z.string(), z.any()),
 }))
     .mutation(async ({ ctx, input }) => {
     const encryptedKeys = encryptJson(input.keys);
@@ -90,7 +90,7 @@ const update = protectedProcedure
     .input(z.object({
     id: z.string(),
     title: z.string().optional(),
-    keys: z.record(z.any()).optional(),
+    keys: z.record(z.string(), z.any()).optional(),
 }))
     .mutation(async ({ ctx, input }) => {
     const existing = await ctx.prisma.credentials.findFirst({
