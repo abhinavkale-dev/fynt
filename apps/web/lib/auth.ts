@@ -117,6 +117,9 @@ export const auth = betterAuth({
     socialProviders,
     trustedOrigins: [
         getServerBaseURL(),
+        process.env.BETTER_AUTH_URL || "",
+        process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "",
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
         process.env.NODE_ENV === "development" ? "http://localhost:3000" : "",
         process.env.NGROK_URL || "",
     ].filter(Boolean) as string[],
