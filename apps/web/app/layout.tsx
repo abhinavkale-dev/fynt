@@ -2,37 +2,53 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/Provider";
+
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.BETTER_AUTH_URL ??
+  (process.env.NODE_ENV === "production"
+    ? "https://fynt.in"
+    : "http://localhost:3000");
+
+const siteTitle = "Fynt | AI Workflow Automation";
+const siteDescription =
+  "Build, run, and monitor AI-powered workflows that connect your apps, trigger actions, and keep operations moving with templates you can launch in minutes.";
+
 const editorialNew = localFont({
     src: "../public/pp-editorial-new-regular.otf",
     variable: "--font-serif",
     display: "swap",
 });
 export const metadata: Metadata = {
-    metadataBase: new URL(
-        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-    ),
-    title: "Fynt",
-    description: "Create and automate workflows with Fynt",
+    metadataBase: new URL(siteUrl),
+    title: siteTitle,
+    description: siteDescription,
     icons: {
         icon: { url: "/icon.svg", type: "image/svg+xml" },
     },
+    alternates: {
+        canonical: "/",
+    },
     openGraph: {
-        title: "Fynt",
-        description: "Create and automate workflows with Fynt",
+        title: siteTitle,
+        description: siteDescription,
+        url: "/",
+        siteName: "Fynt",
+        type: "website",
         images: [
             {
-                url: "/og/fynt-og.webp",
-                width: 1204,
-                height: 600,
-                type: "image/webp",
+                url: "/opengraph-image",
+                width: 1200,
+                height: 630,
+                type: "image/png",
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Fynt",
-        description: "Create and automate workflows with Fynt",
-        images: ["/og/fynt-og.webp"],
+        title: siteTitle,
+        description: siteDescription,
+        images: ["/opengraph-image"],
     },
 };
 export default function RootLayout({ children, }: Readonly<{
