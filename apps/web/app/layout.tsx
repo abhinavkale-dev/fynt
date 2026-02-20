@@ -10,6 +10,8 @@ const siteUrl =
     ? "https://fynt.in"
     : "http://localhost:3000");
 const normalizedSiteUrl = siteUrl.replace(/\/+$/, "");
+const socialImagePath = "/og/fynt-og.png";
+const socialImageUrl = `${normalizedSiteUrl}${socialImagePath}`;
 
 const siteTitle = "Fynt | AI Workflow Automation Platform for Modern Teams";
 const siteDescription =
@@ -38,10 +40,11 @@ export const metadata: Metadata = {
         type: "website",
         images: [
             {
-                url: `${normalizedSiteUrl}/opengraph-image`,
+                url: socialImageUrl,
                 width: 1200,
                 height: 630,
                 type: "image/png",
+                alt: "Automate workflows faster with Fynt. Start free at fynt.in",
             },
         ],
     },
@@ -51,7 +54,7 @@ export const metadata: Metadata = {
         description: siteDescription,
         site: "@Abhinavstwt",
         creator: "@Abhinavstwt",
-        images: [`${normalizedSiteUrl}/opengraph-image`],
+        images: [socialImageUrl],
     },
 };
 export default function RootLayout({ children, }: Readonly<{
