@@ -94,9 +94,15 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
       '@repo/prisma':
         specifier: workspace:*
         version: link:../../packages/prisma
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
         specifier: ^4.1.17
         version: 4.1.17
@@ -115,9 +121,27 @@ importers:
       '@trpc/server':
         specifier: ^11.0.0
         version: 11.8.1(typescript@5.9.2)
+      '@types/bcryptjs':
+        specifier: ^2.4.6
+        version: 2.4.6
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.19.1
+      '@types/pg':
+        specifier: ^8.16.0
+        version: 8.16.0
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.2
+        version: 19.2.2(@types/react@19.2.2)
       '@xyflow/react':
         specifier: ^12.9.3
         version: 12.9.3(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      baseline-browser-mapping:
+        specifier: ^2.10.0
+        version: 2.10.0
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -130,6 +154,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.6.1)
       framer-motion:
         specifier: ^12.29.2
         version: 12.29.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -172,46 +199,18 @@ importers:
       tailwindcss:
         specifier: ^4.1.17
         version: 4.1.17
-      vaul:
-        specifier: ^1.1.2
-        version: 1.1.2(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@types/bcryptjs':
-        specifier: ^2.4.6
-        version: 2.4.6
-      '@types/node':
-        specifier: ^22.15.3
-        version: 22.19.1
-      '@types/pg':
-        specifier: ^8.16.0
-        version: 8.16.0
-      '@types/react':
-        specifier: 19.2.2
-        version: 19.2.2
-      '@types/react-dom':
-        specifier: 19.2.2
-        version: 19.2.2(@types/react@19.2.2)
-      baseline-browser-mapping:
-        specifier: ^2.10.0
-        version: 2.10.0
-      eslint:
-        specifier: ^9.39.1
-        version: 9.39.1(jiti@2.6.1)
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
 
   apps/worker:
     dependencies:
