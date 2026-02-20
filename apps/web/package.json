@@ -6,8 +6,8 @@
   "private": true,
   "scripts": {
     "dev": "BROWSERSLIST_IGNORE_OLD_DATA=true BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true next dev --port 3000",
-    "build": "rm -rf .next-build && BROWSERSLIST_IGNORE_OLD_DATA=true BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true NEXT_DIST_DIR=.next-build next build --webpack",
-    "start": "BROWSERSLIST_IGNORE_OLD_DATA=true BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true NEXT_DIST_DIR=.next-build next start",
+    "build": "rm -rf .next && BROWSERSLIST_IGNORE_OLD_DATA=true BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true next build --webpack",
+    "start": "BROWSERSLIST_IGNORE_OLD_DATA=true BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "BROWSERSLIST_IGNORE_OLD_DATA=true BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true next typegen && tsc --noEmit"
   },

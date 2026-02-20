@@ -1,6 +1,6 @@
 const nextConfig = {
     reactStrictMode: true,
-    distDir: globalThis.process?.env?.NEXT_DIST_DIR || ".next",
+    distDir: ".next",
     transpilePackages: ["@repo/prisma", "@repo/shared"],
     serverExternalPackages: ["ioredis", "bullmq"],
     typedRoutes: true,
