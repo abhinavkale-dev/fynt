@@ -19,8 +19,6 @@ export async function proxy(request: NextRequest) {
         pathname.startsWith("/signup") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/webhooks") ||
-        pathname.startsWith("/opengraph-image") ||
-        pathname.startsWith("/twitter-image") ||
         pathname.startsWith("/_next") ||
         pathname.startsWith("/favicon")) {
         return applySecurityHeaders(NextResponse.next());
@@ -37,6 +35,6 @@ export async function proxy(request: NextRequest) {
 }
 export const config = {
     matcher: [
-        "/((?!api/auth|api/webhooks|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|opengraph-image|twitter-image|.*\\..*).*)",
+        "/((?!api/auth|api/webhooks|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\..*).*)",
     ],
 };
