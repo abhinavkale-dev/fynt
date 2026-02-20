@@ -120,7 +120,6 @@ export default function OpenGraphImage() {
             style={{
               display: "flex",
               alignItems: "center",
-              width: "fit-content",
               padding: "16px 24px",
               borderRadius: "999px",
               border: "2px solid rgba(240, 77, 38, 0.45)",
