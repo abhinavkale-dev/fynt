@@ -5,8 +5,12 @@ import { isWebOnlyRuntimeMode } from "@repo/shared/automation-flags";
 if (!process.env.BETTER_AUTH_SECRET) {
     throw new Error("BETTER_AUTH_SECRET environment variable is required");
 }
-if (!process.env.BETTER_AUTH_URL) {
-    throw new Error("BETTER_AUTH_URL environment variable is required");
+
+function getServerBaseURL() {
+    if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    return "http://localhost:3000";
 }
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
@@ -112,10 +116,10 @@ export const auth = betterAuth({
     },
     socialProviders,
     trustedOrigins: [
-        process.env.BETTER_AUTH_URL,
+        getServerBaseURL(),
         process.env.NODE_ENV === "development" ? "http://localhost:3000" : "",
         process.env.NGROK_URL || "",
     ].filter(Boolean) as string[],
     secret: process.env.BETTER_AUTH_SECRET,
-    baseURL: process.env.BETTER_AUTH_URL,
+    baseURL: getServerBaseURL(),
 });
