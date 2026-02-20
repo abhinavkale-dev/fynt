@@ -127,7 +127,7 @@ const WorkflowId = ({ params }: {
         enabled: id !== 'new' && hasValidWorkflowId,
         staleTime: 60000,
         refetchOnWindowFocus: false,
-        refetchOnMount: 'always',
+        refetchOnMount: true,
         trpc: {
             context: {
                 skipBatch: true,

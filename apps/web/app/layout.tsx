@@ -9,8 +9,9 @@ const siteUrl =
   (process.env.NODE_ENV === "production"
     ? "https://fynt.in"
     : "http://localhost:3000");
+const normalizedSiteUrl = siteUrl.replace(/\/+$/, "");
 
-const siteTitle = "Fynt | AI Workflow Automation";
+const siteTitle = "Fynt | AI Workflow Automation Platform for Modern Teams";
 const siteDescription =
   "Build, run, and monitor AI-powered workflows that connect your apps, trigger actions, and keep operations moving with templates you can launch in minutes.";
 
@@ -20,7 +21,7 @@ const editorialNew = localFont({
     display: "swap",
 });
 export const metadata: Metadata = {
-    metadataBase: new URL(siteUrl),
+    metadataBase: new URL(normalizedSiteUrl),
     title: siteTitle,
     description: siteDescription,
     icons: {
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
         type: "website",
         images: [
             {
-                url: "/opengraph-image",
+                url: `${normalizedSiteUrl}/opengraph-image`,
                 width: 1200,
                 height: 630,
                 type: "image/png",
@@ -48,7 +49,9 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: siteTitle,
         description: siteDescription,
-        images: ["/opengraph-image"],
+        site: "@Abhinavstwt",
+        creator: "@Abhinavstwt",
+        images: [`${normalizedSiteUrl}/opengraph-image`],
     },
 };
 export default function RootLayout({ children, }: Readonly<{

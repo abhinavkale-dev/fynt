@@ -132,6 +132,27 @@ export default function OpenGraphImage() {
           >
             Start free at fynt.in
           </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              marginTop: "20px",
+              fontSize: "20px",
+              lineHeight: 1.2,
+              color: "#b7b7b7",
+            }}
+          >
+            <div style={{ display: "flex" }}>
+              Design &amp; developed by @Abhinavstwt
+            </div>
+            <div style={{ display: "flex", fontSize: "17px", color: "#9f9f9f" }}>
+              X: https://x.com/Abhinavstwt
+            </div>
+            <div style={{ display: "flex", fontSize: "17px", color: "#9f9f9f" }}>
+              Github: https://github.com/abhinavkale-dev/fynt
+            </div>
+          </div>
         </div>
       </div>
     ),
