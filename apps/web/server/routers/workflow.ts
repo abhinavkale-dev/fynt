@@ -239,10 +239,15 @@ const create = protectedProcedure
     .mutation(async ({ ctx, input }) => {
     assertGraphShapeOrThrow(input.nodes, input.edges, "create");
     assertTemplateGraphNotEmptyOrThrow(input.nodes, extractTemplateIdFromMetadata(input.triggerMetadata), "create");
-    const user = await ctx.prisma.user.findUnique({
-        where: { id: ctx.userId! },
-        select: { plan: true, paidUntil: true },
-    });
+    const [user, workflowCount] = await Promise.all([
+        ctx.prisma.user.findUnique({
+            where: { id: ctx.userId! },
+            select: { plan: true, paidUntil: true },
+        }),
+        ctx.prisma.workflow.count({
+            where: { userId: ctx.userId },
+        }),
+    ]);
     if (!user) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
     }
@@ -250,16 +255,11 @@ const create = protectedProcedure
     const effectivePlan = (user.plan !== 'free' && user.paidUntil && user.paidUntil < now)
         ? 'free'
         : user.plan;
-    if (effectivePlan === 'free') {
-        const existingWorkflowCount = await ctx.prisma.workflow.count({
-            where: { userId: ctx.userId },
+    if (effectivePlan === 'free' && workflowCount >= 30) {
+        throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Free plan allows up to 30 workflows. Upgrade your plan for unlimited workflows.',
         });
-        if (existingWorkflowCount >= 30) {
-            throw new TRPCError({
-                code: 'FORBIDDEN',
-                message: 'Free plan allows up to 30 workflows. Upgrade your plan for unlimited workflows.',
-            });
-        }
     }
     const workflow = await ctx.prisma.workflow.create({
         data: {
@@ -298,21 +298,34 @@ const create = protectedProcedure
 const update = protectedProcedure
     .input(updateWorkflowInputSchema)
     .mutation(async ({ ctx, input }) => {
+    const isPositionOnlySave = !input.triggerMetadata && !input.actions;
+    if (isPositionOnlySave) {
+        if (input.nodes !== undefined || input.edges !== undefined) {
+            assertGraphShapeOrThrow(
+                input.nodes ?? [],
+                input.edges ?? [],
+                "update"
+            );
+        }
+        const result = await ctx.prisma.workflow.updateMany({
+            where: { id: input.id, userId: ctx.userId },
+            data: {
+                ...(input.title && { title: input.title }),
+                ...(input.nodes !== undefined && { nodes: input.nodes as any }),
+                ...(input.edges !== undefined && { edges: input.edges as any }),
+            },
+        });
+        if (result.count === 0) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+        }
+        return { id: input.id, updatedAt: new Date() };
+    }
     const existing = await ctx.prisma.workflow.findFirst({
         where: { id: input.id, userId: ctx.userId },
-        include: {
-            trigger: {
-                select: {
-                    metadata: true,
-                },
-            },
-        },
+        include: { trigger: { select: { metadata: true } } },
     });
     if (!existing) {
-        throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Workflow not found'
-        });
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
     }
     if (input.nodes !== undefined || input.edges !== undefined) {
         const nextNodes = input.nodes ?? parseJsonArray(existing.nodes);
@@ -330,34 +343,29 @@ const update = protectedProcedure
             ...(input.edges !== undefined && { edges: input.edges as any }),
         },
         include: {
-            trigger: {
-                include: { type: true }
-            },
-            actions: {
-                include: { type: true },
-                orderBy: { sortingOrder: 'asc' }
-            }
-        }
+            trigger: { include: { type: true } },
+            actions: { include: { type: true }, orderBy: { sortingOrder: 'asc' } },
+        },
     });
-    if (input.triggerMetadata && existing) {
+    if (input.triggerMetadata) {
         await ctx.prisma.trigger.updateMany({
             where: { workflowId: input.id },
-            data: { metadata: input.triggerMetadata as any }
+            data: { metadata: input.triggerMetadata as any },
         });
     }
     if (input.actions) {
-        await ctx.prisma.action.deleteMany({
-            where: { workflowId: input.id }
-        });
-        await ctx.prisma.action.createMany({
-            data: input.actions.map((action, index) => ({
-                id: action.id,
-                workflowId: input.id,
-                availableActionId: action.availableActionId,
-                sortingOrder: index,
-                metadata: action.metadata as any,
-            }))
-        });
+        await ctx.prisma.$transaction([
+            ctx.prisma.action.deleteMany({ where: { workflowId: input.id } }),
+            ctx.prisma.action.createMany({
+                data: input.actions.map((action, index) => ({
+                    id: action.id,
+                    workflowId: input.id,
+                    availableActionId: action.availableActionId,
+                    sortingOrder: index,
+                    metadata: action.metadata as any,
+                })),
+            }),
+        ]);
     }
     return normalizeWorkflowGraph(workflow);
 });

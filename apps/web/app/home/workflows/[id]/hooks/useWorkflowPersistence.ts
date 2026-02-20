@@ -269,40 +269,31 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
             finalizeSaveState(saveVersion);
             return;
         }
-        const runSave = async () => {
+        const runSave = () => {
             if (workflowId === 'new')
-                return;
-            try {
-                setIsAutoSaving(true);
-                setSaveStatus('saving');
-                setLastSaveError(null);
-                await updateWorkflowMutation.mutateAsync({
-                    id: workflowId,
-                    title: queuedSnapshot.title,
-                    nodes: queuedSnapshot.nodes,
-                    edges: queuedSnapshot.edges,
-                });
-                lastValidGraphRef.current = {
-                    nodes: cloneForSave(queuedSnapshot.nodes),
-                    edges: cloneForSave(queuedSnapshot.edges),
-                };
-                lastPersistedSnapshotKeyRef.current = snapshotKey;
-                finalizeSaveState(saveVersion);
-            }
-            catch (err) {
+                return Promise.resolve();
+            setLastSaveError(null);
+            setSaveStatus('saved');
+            lastValidGraphRef.current = {
+                nodes: cloneForSave(queuedSnapshot.nodes),
+                edges: cloneForSave(queuedSnapshot.edges),
+            };
+            lastPersistedSnapshotKeyRef.current = snapshotKey;
+            finalizeSaveState(saveVersion);
+            return updateWorkflowMutation.mutateAsync({
+                id: workflowId,
+                title: queuedSnapshot.title,
+                nodes: queuedSnapshot.nodes,
+                edges: queuedSnapshot.edges,
+            }).then(() => {}, (err: unknown) => {
                 console.error('Workflow save failed:', err);
                 setSaveStatus('error');
                 setLastSaveError(err instanceof Error ? err.message : 'Failed to save');
-            }
-            finally {
-                setIsAutoSaving(false);
-            }
+            });
         };
         saveQueueRef.current = saveQueueRef.current
-            .catch(() => {
-        })
+            .catch(() => {})
             .then(runSave);
-        await saveQueueRef.current;
     }, [updateWorkflowMutation, finalizeSaveState, template]);
     useEffect(() => {
         enqueueWorkflowUpdateRef.current = enqueueWorkflowUpdate;

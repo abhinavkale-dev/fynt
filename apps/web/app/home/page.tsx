@@ -162,7 +162,7 @@ const Home = () => {
         saveWorkflowSummaryCache(normalizedWorkflows);
     }, [liveWorkflows]);
     const workflows = useMemo<WorkflowSummary[]>(() => (liveWorkflows as WorkflowSummary[] | undefined) ?? cachedWorkflows ?? [], [liveWorkflows, cachedWorkflows]);
-    const loading = isWorkflowsLoading && !liveWorkflows && (!cachedWorkflows || cachedWorkflows.length === 0);
+    const loading = isWorkflowsLoading && !liveWorkflows && cachedWorkflows === null;
     useEffect(() => {
         const syncViewportSize = () => {
             setViewportWidth(window.innerWidth);
@@ -315,11 +315,46 @@ const Home = () => {
             ]);
         },
     });
-    const handleCreateWorkflow = async () => {
-        try {
-            const newId = crypto.randomUUID();
-            const randomName = generateWorkflowName();
-            const createdWorkflow = await createWorkflowMutation.mutateAsync({
+    const handleCreateWorkflow = () => {
+        const newId = crypto.randomUUID();
+        const randomName = generateWorkflowName();
+        const now = new Date();
+        const optimisticWorkflow = {
+            id: newId,
+            title: randomName,
+            userId: "",
+            nodes: [] as unknown[],
+            edges: [] as unknown[],
+            trigger: { metadata: {} as unknown, type: { id: "manual", name: "manual", image: "" } } as never,
+            actions: [] as never[],
+            createdAt: now,
+            updatedAt: now,
+        };
+        utils.workflow.getById.setData({ id: newId }, optimisticWorkflow);
+        const summaryItem = {
+            id: newId,
+            title: randomName,
+            createdAt: now,
+            updatedAt: now,
+            nodeCount: 0,
+            edgeCount: 0,
+            templateId: null as string | null,
+            triggerTypes: [] as string[],
+            lastRunStatus: null as 'Pending' | 'Success' | 'Failure' | null,
+            lastRunAt: null as Date | null,
+        };
+        utils.workflow.getAllSummaries.setData(undefined, (previous) => {
+            if (!previous || previous.length === 0) return [summaryItem];
+            return [summaryItem, ...previous.filter((w) => w.id !== newId)];
+        });
+        setCachedWorkflows((prev) => {
+            const next = prev ? [summaryItem, ...prev.filter((w) => w.id !== newId)] : [summaryItem];
+            saveWorkflowSummaryCache(next);
+            return next;
+        });
+        router.push(`/home/workflows/${newId}`);
+        createWorkflowMutation.mutate(
+            {
                 id: newId,
                 title: randomName,
                 availableTriggerId: 'manual',
@@ -327,13 +362,14 @@ const Home = () => {
                 actions: [],
                 nodes: [],
                 edges: [],
-            });
-            utils.workflow.getById.setData({ id: newId }, createdWorkflow);
-            router.push(`/home/workflows/${newId}`);
-        }
-        catch (error) {
-            console.error('Failed to create workflow:', error);
-        }
+            },
+            {
+                onError: (error) => {
+                    console.error('Failed to create workflow:', error);
+                    utils.workflow.getById.invalidate({ id: newId });
+                },
+            }
+        );
     };
     const handleDeleteWorkflow = async (workflowId: string) => {
         try {

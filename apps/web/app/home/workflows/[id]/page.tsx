@@ -265,7 +265,9 @@ const WorkflowId = ({ params }: {
     });
     const updateWorkflowMutation = trpc.workflow.update.useMutation({
         onSuccess: (workflow) => {
-            syncWorkflowCaches(workflow);
+            if ('title' in workflow) {
+                syncWorkflowCaches(workflow);
+            }
         },
     });
     const { saveStatus, lastSaveError, isCreateWorkflowPending, showTemplateSetup, setShowTemplateSetup, setTemplateSetupDismissed, graphRecoveryNotice, graphIntegrityError, markWorkflowChanged, handleImmediateSave, handleManualSave, } = useWorkflowPersistence({

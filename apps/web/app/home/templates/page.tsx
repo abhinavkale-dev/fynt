@@ -309,47 +309,60 @@ export default function TemplatesPage() {
             const existingWorkflows = utils.workflow.getAllSummaries.getData() ??
                 (await utils.workflow.getAllSummaries.fetch());
             const nextTemplateTitle = getNextTemplateWorkflowTitle(template.name, existingWorkflows);
-            const createdWorkflow = await createWorkflowMutation.mutateAsync({
+            const now = new Date();
+            const triggerMetadata = {
+                templateId: template.id,
+                templateVersion: template.templateVersion,
+                executionMode: "strict_template_v1",
+            };
+            const optimisticWorkflow = {
                 id: workflowId,
                 title: nextTemplateTitle,
-                availableTriggerId: template.availableTriggerId,
-                triggerMetadata: {
-                    templateId: template.id,
-                    templateVersion: template.templateVersion,
-                    executionMode: "strict_template_v1",
-                },
-                actions: [],
-                nodes: graph.nodes,
-                edges: graph.edges,
-            });
-            const createdWorkflowWithGraph = {
-                ...createdWorkflow,
-                nodes: graph.nodes,
-                edges: graph.edges,
+                userId: "",
+                nodes: graph.nodes as unknown[],
+                edges: graph.edges as unknown[],
+                trigger: { metadata: triggerMetadata as unknown, type: { id: template.availableTriggerId, name: template.availableTriggerId, image: "" } } as never,
+                actions: [] as never[],
+                createdAt: now,
+                updatedAt: now,
             };
+            const summaryItem = {
+                id: workflowId,
+                title: nextTemplateTitle,
+                createdAt: now,
+                updatedAt: now,
+                nodeCount: graph.nodes.length,
+                edgeCount: graph.edges.length,
+                templateId: template.id,
+                triggerTypes: graph.nodes
+                    .filter((n: { type?: string }) => n.type === 'cronTrigger' || n.type === 'webhookTrigger' || n.type === 'trigger')
+                    .map((n: { type?: string }) => n.type!) as string[],
+                lastRunStatus: null as 'Pending' | 'Success' | 'Failure' | null,
+                lastRunAt: null as Date | null,
+            };
+            utils.workflow.getById.setData({ id: workflowId }, optimisticWorkflow);
             utils.workflow.getAllSummaries.setData(undefined, (previous) => {
-                const nextItem = {
-                    id: createdWorkflow.id,
-                    title: createdWorkflow.title,
-                    createdAt: createdWorkflow.createdAt,
-                    updatedAt: createdWorkflow.updatedAt,
-                    nodeCount: graph.nodes.length,
-                    edgeCount: graph.edges.length,
-                    templateId: template.id,
-                    triggerTypes: graph.nodes
-                        .filter((n: { type?: string }) => n.type === 'cronTrigger' || n.type === 'webhookTrigger' || n.type === 'trigger')
-                        .map((n: { type?: string }) => n.type!) as string[],
-                    lastRunStatus: null,
-                    lastRunAt: null,
-                };
-                if (!previous || previous.length === 0) {
-                    return [nextItem];
-                }
-                const withoutDuplicate = previous.filter((workflow) => workflow.id !== createdWorkflow.id);
-                return [nextItem, ...withoutDuplicate];
+                if (!previous || previous.length === 0) return [summaryItem];
+                return [summaryItem, ...previous.filter((w) => w.id !== workflowId)];
             });
-            utils.workflow.getById.setData({ id: workflowId }, createdWorkflowWithGraph);
             router.push(`/home/workflows/${workflowId}`);
+            createWorkflowMutation.mutate(
+                {
+                    id: workflowId,
+                    title: nextTemplateTitle,
+                    availableTriggerId: template.availableTriggerId,
+                    triggerMetadata,
+                    actions: [],
+                    nodes: graph.nodes,
+                    edges: graph.edges,
+                },
+                {
+                    onError: (error) => {
+                        console.error("Failed to create workflow from template", error);
+                        utils.workflow.getById.invalidate({ id: workflowId });
+                    },
+                }
+            );
         }
         catch (error) {
             console.error("Failed to create workflow from template", error);
