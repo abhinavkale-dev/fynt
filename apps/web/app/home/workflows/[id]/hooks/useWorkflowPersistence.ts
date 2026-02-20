@@ -50,7 +50,7 @@ interface WorkflowSaveSnapshot {
     nodes: Node[];
     edges: Edge[];
 }
-const AUTO_SAVE_DEBOUNCE_MS = 300;
+const AUTO_SAVE_DEBOUNCE_MS = 2000;
 function buildSnapshotKey(snapshot: WorkflowSaveSnapshot): string {
     return JSON.stringify({
         title: snapshot.title,
