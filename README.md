@@ -16,77 +16,9 @@ Fynt is a self-hostable workflow automation platform. You drag nodes onto a canv
 
 ## Architecture
 
-Single-diagram view of the Fynt runtime:
+Visual system design:
 
-```
-                +---------------+
-                |  Browser UI   |
-                +---------------+
-                      |  execute / webhook / ws-token
-                      |--------------------------------.
-                      v                                \ (legacy fallback)
-     +-----------------------------+  ---------------> /api/executions/:runId/stream (SSE)
-     |   Web API + tRPC (apps/web) |
-     | - auth + ownership + limits |
-     | - create WorkflowRun tx     |
-     | - issue ws-token            |
-     +----------+------------------+
-                |                       |
-        enqueue BullMQ           save credentials
-                v                       v
-  +---------------------+   +-----------------------------+
-  | Redis               |   | encryptJson(ENCRYPTION_KEY) |
-  | BullMQ + locks +    |   | -> Credentials.keys(cipher) |
-  | Pub/Sub             |   +-----------------------------+
-  +---------------------+                  |
-          ^                                v
-          | jobs/events        +----------------------+
-          |                    |     Postgres DB      |
-          |                    | User / Workflow /    |
-          |                    | Run / NodeRun /      |
-          |                    | Credentials          |
-          |                    | (keys stored         |
-          |                    |  encrypted)          |
-          |                    +----------------------+
-          |                                ^
-          | read+write run/node            | read credentialId
-  +-------------------------------+--------+
-  |  Worker + Node Executor       |
-  |  (apps/worker, concurrency=5) |
-  |  - DAG + condition + retry    |
-  |  - cron every 60s:            |
-  |    health -> due ->           |
-  |    dedupe fg:cron:bucket:*    |
-  +-------------------------------+
-                |
-        decryptJson(ENCRYPTION_KEY)
-                v
-  +-------------------------------+
-  |  credentialResolver (worker)  |
-  |  plaintext only in memory     |
-  +-------------------------------+
-                |
-                v
-  +-------------------------------+
-  |  Integrations                 |
-  |  OpenAI / Anthropic / Gemini  |
-  |  GitHub / Notion /            |
-  |  Slack / Discord              |
-  +-------------------------------+
-                |
-        publish workflow-run:<runId>
-                v
-  +----------------------+   WS live events   +------------------------+
-  | Redis Pub/Sub        | -----------------> | Realtime WS            |
-  | workflow-run:<runId> | <----------------- | (apps/realtime)        |
-  +----------------------+                    | SUB + token verify     |
-                                              +------------------------+
-                                                        |
-                                                        v
-                                              +---------------+
-                                              |  Browser UI   |
-                                              +---------------+
-```
+![Fynt System Design](./apps/web/public/system-design-fynt.png)
 
 
 ## Node Types
