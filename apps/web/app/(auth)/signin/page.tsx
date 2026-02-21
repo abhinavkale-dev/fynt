@@ -52,15 +52,7 @@ export default function SignInPage() {
             setIsLoading(false);
         }
     }
-    return (<AuthLayout title={<svg viewBox="0 0 400 48" className="w-full max-w-md h-auto" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="36" fontFamily="var(--font-serif)" fontSize="36" fill="white" fontWeight="400">
-            Sign in to your account
-          </text>
-        </svg>} subtitle="Enter your credentials to access your workflows" marketingTitle={<svg viewBox="0 0 420 48" className="w-full max-w-lg h-auto" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="36" fontFamily="var(--font-serif)" fontSize="36" fill="white" fontWeight="400">
-            Welcome back to Fynt
-          </text>
-        </svg>} marketingDescription={[
+    return (<AuthLayout title="Sign in to your account" subtitle="Enter your credentials to access your workflows" marketingTitle="Welcome back to Fynt" marketingDescription={[
             "Pick up where you left off. Your workflows, integrations, and automations are waiting for you.",
             "Fynt is a graph-based workflow engine with node-level retries, checkpointing, and crash-safe execution built for production systems.",
             "Connect Slack, GitHub, databases, and AI models into one seamless automation platform.",
@@ -73,7 +65,7 @@ export default function SignInPage() {
       <Divider />
 
       
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="auth-form space-y-5 lg:space-y-4">
         <AnimatePresence>
           {error && (<motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2, ease: "easeOut" }} className="overflow-hidden">
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
@@ -99,7 +91,7 @@ export default function SignInPage() {
       </form>
 
       
-      <div className="mt-6 text-center">
+      <div className="auth-switch mt-6 lg:mt-5 text-center">
         <span className="text-[#6B7280] text-sm">
           Don&apos;t have an account?{" "}
         </span>

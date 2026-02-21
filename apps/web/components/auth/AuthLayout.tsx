@@ -33,15 +33,17 @@ function Logo() {
       <path d="M19.4718 36.8051L23.3871 18.6525H60.0481L63.6074 0.5H7.72607L0.607422 36.8051H19.4718Z" stroke="white" strokeOpacity="0.3"/>
     </svg>);
 }
-function FyntSvg() {
-    return (<svg width="280" height="280" viewBox="0 0 114 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+function FyntSvg({ className }: {
+    className?: string;
+}) {
+    return (<svg className={`auth-marketing-art ${className ?? ""}`.trim()} viewBox="0 0 114 88" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M105.951 6.012q-5.37-3.105-12.96-3.12c-5.05-.01-9.36 1.01-12.93 3.07q-4.425 2.55-5.19 6c-.1.44-.15.86-.16 1.29v.13q0 2.655 2.28 5.07l-2.28 1.32-7.86 4.53-28.29-.05c-.44-.82-1.05-1.61-1.82-2.38s-1.72-1.47-2.83-2.11q-5.385-3.105-12.96-3.12c-5.06-.01-9.37 1.01-12.93 3.07s-5.34 4.54-5.32 7.46c.01 2.92 1.81 5.42 5.4 7.49 2.04 1.18 4.32 2.02 6.83 2.53 1.9.39 3.95.58 6.13.59 2.14 0 4.15-.18 6.02-.55 2.55-.5 4.86-1.34 6.91-2.53 1.11-.64 2.04-1.34 2.81-2.1.76-.76 1.36-1.55 1.79-2.37l25.33.04.08 14.02v.61c-1.41.25-2.78.59-4.11 1.03-1.32.45-2.53.99-3.64 1.63-1.43.83-2.58 1.72-3.43 2.69-1.27 1.43-1.9 3.03-1.89 4.77.01 2.92 1.81 5.41 5.4 7.48 2.06 1.19 4.37 2.04 6.92 2.54 1.88.38 3.9.57 6.04.58 2.08 0 4.03-.17 5.86-.52 2.62-.48 4.97-1.34 7.07-2.55 3.54-2.05 5.32-4.52 5.32-7.41v-.05c-.01-2.92-1.81-5.42-5.4-7.49-1.07-.61-2.23-1.14-3.47-1.56-.05-.02-.1-.03-.15-.05-1.29-.43-2.65-.77-4.07-1.02l-.06-5.02-.12-11.37.44-.25 9.7-5.6c.87.28 1.75.51 2.65.69 2.73.58 5.59.76 8.59.53 1.2-.09 2.35-.24 3.46-.47 2.56-.49 4.87-1.34 6.92-2.53 3.56-2.04 5.33-4.53 5.33-7.44v-.02c-.02-2.92-1.82-5.41-5.41-7.48Zm-79.38 24.41c-1.54.89-3.38 1.33-5.54 1.32-2.16 0-4.01-.45-5.56-1.34-1.54-.89-2.32-1.96-2.32-3.21-.01-1.24.75-2.31 2.29-3.2 1.54-.88 3.38-1.33 5.54-1.32 2.16 0 4.01.45 5.55 1.34 1.55.9 2.33 1.96 2.33 3.21.01 1.25-.75 2.31-2.29 3.2Zm47.73 21.2c.16.07.32.15.47.24 1.54.89 2.32 1.96 2.32 3.21 0 1.24-.75 2.31-2.29 3.2-.14.08-.28.15-.42.22-1.45.73-3.15 1.1-5.12 1.1s-3.8-.4-5.3-1.2c-.09-.04-.17-.09-.26-.14-1.54-.9-2.32-1.97-2.32-3.21-.01-1.25.75-2.31 2.29-3.2.08-.05.17-.1.26-.14 1.48-.8 3.24-1.19 5.28-1.19 1.95.01 3.64.38 5.09 1.11Zm24.31-34.95c-1.53.89-3.38 1.33-5.54 1.32-2.15 0-4.01-.45-5.55-1.34-1.55-.89-2.32-1.96-2.33-3.21-.01-1.24.76-2.31 2.29-3.2 1.54-.88 3.39-1.32 5.54-1.32s4.01.45 5.56 1.34c1.55.9 2.32 1.97 2.33 3.21 0 1.25-.76 2.31-2.3 3.2Z" stroke="#ff8c69"/>
       <path d="M100.911 13.472c0 1.25-.76 2.31-2.3 3.2-1.53.89-3.38 1.33-5.54 1.32-2.15 0-4.01-.45-5.55-1.34-1.55-.89-2.32-1.96-2.33-3.21-.01-1.24.76-2.31 2.29-3.2 1.54-.88 3.39-1.32 5.54-1.32s4.01.45 5.56 1.34c1.55.9 2.32 1.97 2.33 3.21Zm-23.82 41.6c0 1.24-.75 2.31-2.29 3.2-.14.08-.28.15-.42.22-1.45.73-3.15 1.1-5.12 1.1s-3.8-.4-5.3-1.2c-.09-.04-.17-.09-.26-.14-1.54-.9-2.32-1.97-2.32-3.21-.01-1.25.75-2.31 2.29-3.2.08-.05.17-.1.26-.14 1.48-.8 3.24-1.19 5.28-1.19 1.95.01 3.64.38 5.09 1.11.16.07.32.15.47.24 1.54.89 2.32 1.96 2.32 3.21Zm-48.23-27.85c.01 1.25-.75 2.31-2.29 3.2s-3.38 1.33-5.54 1.32c-2.16 0-4.01-.45-5.56-1.34-1.54-.89-2.32-1.96-2.32-3.21-.01-1.24.75-2.31 2.29-3.2 1.54-.88 3.38-1.33 5.54-1.32 2.16 0 4.01.45 5.55 1.34 1.55.9 2.33 1.96 2.33 3.21Zm82.5-13.71v19.98c.01 2.92-1.76 5.41-5.33 7.46-2.94 1.71-6.41 2.71-10.38 3-3.98.3-7.72-.11-11.24-1.22v-20c.87.28 1.75.51 2.65.69 2.73.58 5.59.76 8.59.53 1.2-.09 2.35-.24 3.46-.47 2.56-.49 4.87-1.34 6.92-2.53 3.56-2.04 5.33-4.53 5.33-7.44Zm-26.95 9.219v20l-5.74 3.31s-.1-.03-.15-.05c-1.29-.43-2.65-.77-4.07-1.02l-.06-5.02-.12-11.37.44-.25zm-7.419-4.279-2.28 1.32v-6.39q0 2.655 2.28 5.07Z" stroke="#F04D26"/>
       <path d="M87.541 55.142v19.95c.02 2.91-1.76 5.4-5.32 7.46s-7.87 3.08-12.93 3.07q-7.575-.015-12.96-3.12c-3.59-2.07-5.39-4.56-5.4-7.48v-20c.01 2.92 1.81 5.41 5.4 7.48 2.06 1.19 4.37 2.04 6.92 2.54 1.88.38 3.9.57 6.04.58 2.08 0 4.03-.17 5.86-.52 2.62-.48 4.97-1.34 7.07-2.55 3.54-2.05 5.32-4.52 5.32-7.41Zm-23.54-10.851v.61c-1.41.25-2.78.59-4.11 1.03-1.32.45-2.53.99-3.64 1.63-1.43.83-2.58 1.72-3.43 2.69l-14.23-.02v-20l25.33.04zm-25.41-14.059v20c-.43.82-1.03 1.61-1.79 2.37-.77.76-1.7 1.46-2.81 2.1-3.56 2.06-7.87 3.09-12.93 3.08q-7.575-.015-12.96-3.12c-3.59-2.07-5.39-4.57-5.4-7.49v-20c.01 2.92 1.81 5.42 5.4 7.49 2.04 1.18 4.32 2.02 6.83 2.53 1.9.39 3.95.58 6.13.59 2.14 0 4.15-.18 6.02-.55 2.55-.5 4.86-1.34 6.91-2.53 1.11-.64 2.04-1.34 2.81-2.1.76-.76 1.36-1.55 1.79-2.37Z" stroke="#F04D26"/>
     </svg>);
 }
 function LeftRulerTicks() {
-    return (<div className="ruler-ticks absolute -left-3 top-0 flex flex-col gap-10 text-xs font-mono origin-left">
+    return (<div className="ruler-ticks absolute -left-3 inset-y-0 py-2 flex flex-col justify-between text-xs font-mono origin-left">
       <div className="flex items-center gap-2 text-white/30"><span className="w-1 h-px bg-white/30"/><span className="rotate-90">0</span></div>
       <div className="flex items-center gap-1 text-white/30"><span className="w-1 h-px bg-white/30"/><span className="rotate-90">50</span></div>
       <div className="flex items-center gap-0.5 text-white/30"><span className="w-1 h-px bg-white/30"/><span className="rotate-90">100</span></div>
@@ -60,7 +62,7 @@ function LeftRulerTicks() {
     </div>);
 }
 function RightRulerTicks() {
-    return (<div className="ruler-ticks absolute -right-3 top-0 flex flex-col gap-10 text-xs font-mono origin-right">
+    return (<div className="ruler-ticks absolute -right-3 inset-y-0 py-2 flex flex-col justify-between text-xs font-mono origin-right">
       <div className="flex items-center gap-2 text-white/30" style={{ transform: 'translateX(7px)' }}><span className="-rotate-90">0</span><span className="w-1 h-px bg-white/30"/></div>
       <div className="flex items-center gap-1 text-white/30" style={{ transform: 'translateX(5px)' }}><span className="-rotate-90">50</span><span className="w-1 h-px bg-white/30"/></div>
       <div className="flex items-center gap-0.5 text-white/30"><span className="-rotate-90">100</span><span className="w-1 h-px bg-white/30"/></div>
@@ -87,12 +89,12 @@ interface AuthLayoutProps {
 }
 export function AuthLayout({ children, title, subtitle, marketingTitle, marketingDescription, }: AuthLayoutProps) {
     const prefersReducedMotion = useReducedMotion();
-    return (<div className="min-h-screen bg-[#151515] overflow-hidden">
+    return (<div className="auth-layout min-h-screen lg:h-dvh bg-[#151515] overflow-y-auto lg:overflow-hidden">
       
       <div className="absolute inset-4 md:inset-8 border border-white/10 rounded-2xl pointer-events-none hidden md:block"/>
 
       
-      <div className="relative min-h-screen flex items-center justify-center p-4 md:p-8">
+      <div className="auth-shell relative min-h-screen lg:min-h-0 lg:h-full flex items-start lg:items-center justify-center p-4 md:p-8 lg:p-8">
 
         
         <motion.div className="absolute top-4 md:top-8 left-[calc(50%-320px)] md:left-[calc(50%-400px)] w-px h-[calc(50%-200px)] bg-white/20 hidden lg:block" initial={prefersReducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.4, ease: "easeOut" }}/>
@@ -107,18 +109,18 @@ export function AuthLayout({ children, title, subtitle, marketingTitle, marketin
         <motion.div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-[calc(50%-400px)] h-px bg-white/20 hidden lg:block" style={{ marginTop: '200px' }} initial={prefersReducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.65, duration: 0.4, ease: "easeOut" }}/>
 
         
-        <motion.div className="absolute left-12 top-1/2 pointer-events-none hidden lg:block" style={{ transform: 'translateY(calc(-50% - 400px))' }} initial={prefersReducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.4, ease: "easeOut" }}>
+        <motion.div className="auth-ruler-wrap absolute left-12 top-10 bottom-10 pointer-events-none hidden lg:block" initial={prefersReducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.4, ease: "easeOut" }}>
           <LeftRulerTicks />
         </motion.div>
-        <motion.div className="absolute right-12 top-1/2 pointer-events-none hidden lg:block" style={{ transform: 'translateY(calc(-50% - 400px))' }} initial={prefersReducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.4, ease: "easeOut" }}>
+        <motion.div className="auth-ruler-wrap absolute right-12 top-10 bottom-10 pointer-events-none hidden lg:block" initial={prefersReducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.4, ease: "easeOut" }}>
           <RightRulerTicks />
         </motion.div>
 
         
-        <motion.div className="relative w-full max-w-5xl bg-[#151515] md:bg-[#151515]/80 md:backdrop-blur-xl border border-white/10 rounded-3xl md:rounded-[40px] md:shadow-2xl md:shadow-black/50 overflow-visible z-10" initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE_OUT_QUAD }}>
+        <motion.div className="auth-card relative w-full max-w-5xl bg-[#151515] md:bg-[#151515]/80 md:backdrop-blur-xl border border-white/10 rounded-3xl md:rounded-[40px] md:shadow-2xl md:shadow-black/50 overflow-visible lg:overflow-hidden z-10 lg:max-h-[calc(100dvh-4rem)] lg:flex lg:flex-col" initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE_OUT_QUAD }}>
 
           
-          <div className="relative flex items-center justify-center gap-3 pt-8 pb-4 md:pt-10 md:pb-6 border-b border-white/5">
+          <div className="auth-header relative flex items-center justify-center gap-3 pt-8 pb-4 md:pt-9 md:pb-5 lg:pt-7 lg:pb-4 xl:pt-9 xl:pb-5 border-b border-white/5">
             <Link href="/" className="absolute left-6 md:left-8 hover:opacity-80 transition-opacity">
               <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="40px" height="40px" viewBox="0 0 40 40">
                 <circle cx="20" cy="20" r="19" fill="none" stroke="#F7F8F8" strokeWidth="1" opacity="0.2"/>
@@ -132,17 +134,17 @@ export function AuthLayout({ children, title, subtitle, marketingTitle, marketin
           </div>
 
           
-          <div className="grid lg:grid-cols-2">
+          <div className="grid lg:grid-cols-2 lg:flex-1 lg:min-h-0">
 
             
-            <div className="px-6 py-8 md:px-12 md:py-10 lg:border-r lg:border-white/5">
+            <div className="auth-panel auth-panel-left px-6 py-8 md:px-12 md:py-10 lg:px-10 lg:py-8 xl:px-12 xl:py-9 lg:border-r lg:border-white/5 lg:min-h-0 lg:overflow-hidden">
               <motion.div className="max-w-sm mx-auto lg:mx-0" variants={prefersReducedMotion ? undefined : authContainer} initial="hidden" animate="show">
                 <motion.div className="mb-2" variants={prefersReducedMotion ? undefined : authItem}>
-                  {typeof title === 'string' ? (<h1 className="font-serif text-3xl md:text-4xl text-white">
+                  {typeof title === 'string' ? (<h1 className="auth-title font-serif text-3xl md:text-4xl text-white">
                       {title}
                     </h1>) : (title)}
                 </motion.div>
-                {subtitle && (<motion.p className="text-[#7D7D87] text-sm mb-8" variants={prefersReducedMotion ? undefined : authItem}>
+                {subtitle && (<motion.p className="auth-subtitle text-[#7D7D87] text-sm mb-8 lg:mb-6" variants={prefersReducedMotion ? undefined : authItem}>
                     {subtitle}
                   </motion.p>)}
 
@@ -153,23 +155,23 @@ export function AuthLayout({ children, title, subtitle, marketingTitle, marketin
             </div>
 
             
-            <div className="hidden lg:block relative px-12 py-10 bg-[#1e1e1e]/50 rounded-br-3xl md:rounded-br-[40px]">
+            <div className="auth-panel auth-panel-right hidden lg:block relative px-10 py-8 xl:px-12 xl:py-9 bg-[#1e1e1e]/50 rounded-br-3xl md:rounded-br-[40px] lg:min-h-0 lg:overflow-hidden">
               <motion.div className="relative z-10" variants={prefersReducedMotion ? undefined : marketingContainer} initial="hidden" animate="show">
-                <motion.div className="mb-6 leading-tight" variants={prefersReducedMotion ? undefined : marketingItem}>
-                  {typeof marketingTitle === 'string' ? (<h2 className="font-serif text-3xl text-white">
+                <motion.div className="mb-5 xl:mb-6 leading-tight" variants={prefersReducedMotion ? undefined : marketingItem}>
+                  {typeof marketingTitle === 'string' ? (<h2 className="auth-marketing-title font-serif text-3xl text-white">
                       {marketingTitle}
                     </h2>) : (marketingTitle)}
                 </motion.div>
 
-                <motion.div className="space-y-4" variants={prefersReducedMotion ? undefined : marketingItem}>
+                <motion.div className="auth-marketing-copy space-y-3 xl:space-y-4" variants={prefersReducedMotion ? undefined : marketingItem}>
                   {marketingDescription.map((paragraph, index) => (<p key={index} className="text-[#9CA3AF] text-sm leading-relaxed">
                       {paragraph}
                     </p>))}
                 </motion.div>
 
                 
-                <motion.div className="mt-8 flex justify-center" variants={prefersReducedMotion ? undefined : marketingSvgItem}>
-                  <FyntSvg />
+                <motion.div className="auth-marketing-art-wrap mt-6 xl:mt-8 flex justify-center" variants={prefersReducedMotion ? undefined : marketingSvgItem}>
+                  <FyntSvg className="w-[210px] h-[210px] xl:w-[250px] xl:h-[250px]" />
                 </motion.div>
               </motion.div>
             </div>
@@ -204,13 +206,13 @@ export function OAuthButton({ provider, onClick }: OAuthButtonProps) {
         },
     };
     const { label, icon } = config[provider];
-    return (<button type="button" onClick={onClick} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-[#252525] hover:bg-[#2d2d2d] border border-white/10 hover:border-white/20 rounded-xl text-white text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#F04D26]/50 focus:ring-offset-2 focus:ring-offset-[#151515]">
+    return (<button type="button" onClick={onClick} className="auth-control w-full flex items-center justify-center gap-3 px-4 py-3 lg:py-2.5 bg-[#252525] hover:bg-[#2d2d2d] border border-white/10 hover:border-white/20 rounded-xl text-white text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#F04D26]/50 focus:ring-offset-2 focus:ring-offset-[#151515]">
       {icon}
       {label}
     </button>);
 }
 export function Divider() {
-    return (<div className="relative my-6">
+    return (<div className="auth-divider relative my-6 lg:my-4">
       <div className="absolute inset-0 flex items-center">
         <div className="w-full border-t border-white/10"/>
       </div>
@@ -225,7 +227,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 export function AuthInput({ label, icon, ...props }: InputProps) {
     return (<div className="space-y-2">
-      <label className="block text-sm font-medium text-[#9CA3AF]">
+      <label className="auth-input-label block text-sm font-medium text-[#9CA3AF]">
         {label}
         {props.required && <span className="text-[#F04D26]">*</span>}
       </label>
@@ -234,7 +236,7 @@ export function AuthInput({ label, icon, ...props }: InputProps) {
             {icon}
           </div>)}
         <input {...props} className={`
-            w-full px-4 py-3
+            auth-control w-full px-4 py-3 lg:py-2.5
             ${icon ? "pl-11" : ""}
             bg-[#252525] border border-white/10
             rounded-xl text-white placeholder-[#6B7280]
@@ -250,7 +252,7 @@ interface PrimaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 export function PrimaryButton({ children, isLoading, ...props }: PrimaryButtonProps) {
     return (<button {...props} disabled={isLoading || props.disabled} className={`
-        w-full py-3.5 px-4
+        auth-primary-btn w-full py-3.5 lg:py-3 px-4
         bg-gradient-to-r from-[#F04D26] to-[#E63D00]
         hover:from-[#E63D00] hover:to-[#CC3600]
         text-white font-medium rounded-xl
@@ -270,15 +272,15 @@ export function PrimaryButton({ children, isLoading, ...props }: PrimaryButtonPr
     </button>);
 }
 export function FooterDisclaimer() {
-    return (<p className="mt-8 text-xs text-[#6B7280] text-center leading-relaxed">
+    return (<p className="auth-disclaimer mt-8 lg:mt-6 text-xs text-[#6B7280] text-center leading-relaxed">
       By continuing, you agree to our{" "}
-      <a href="#" className="text-[#F04D26] underline hover:no-underline">
+      <span className="text-[#F04D26] underline">
         Terms of Service
-      </a>{" "}
+      </span>{" "}
       and{" "}
-      <a href="#" className="text-[#F04D26] underline hover:no-underline">
+      <span className="text-[#F04D26] underline">
         Privacy Policy
-      </a>
+      </span>
       .
     </p>);
 }

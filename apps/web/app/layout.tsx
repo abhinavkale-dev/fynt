@@ -67,7 +67,7 @@ export default function RootLayout({ children, }: Readonly<{
         "--font-inter": 'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     } as React.CSSProperties;
     return (<html lang="en">
-      <body className={`${editorialNew.variable} antialiased`} style={fallbackFontVars} suppressHydrationWarning>
+      <body className={`${editorialNew.variable} antialiased`} style={fallbackFontVars}>
         <TRPCProvider>
           {children}
         </TRPCProvider>

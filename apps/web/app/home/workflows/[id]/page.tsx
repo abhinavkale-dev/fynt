@@ -884,7 +884,7 @@ const WorkflowId = ({ params }: {
                 <button type="button" onClick={() => setShowExecutionBlockedDialog(false)} className="inline-flex h-10 items-center justify-center rounded-md border border-white/20 px-4 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
                   Stay Here
                 </button>
-                <a href="https://github.com/abhinavkale-dev/fynt.git" target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center justify-center rounded-md bg-[#F04D26] px-4 text-sm font-medium text-white transition-colors hover:bg-[#F04D26]/90">
+                <a href="https://github.com/abhinavkale-dev/fynt" target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center justify-center rounded-md bg-[#F04D26] px-4 text-sm font-medium text-white transition-colors hover:bg-[#F04D26]/90">
                   Self Host
                 </a>
               </div>

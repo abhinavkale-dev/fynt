@@ -141,14 +141,11 @@ const Home = () => {
     } | null>(null);
     const [pendingDeleteWorkflowId, setPendingDeleteWorkflowId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
-    const [cachedWorkflows, setCachedWorkflows] = useState<WorkflowSummary[] | null>(null);
-    const { data: liveWorkflows, isLoading: isWorkflowsLoading } = trpc.workflow.getAllSummaries.useQuery(undefined, {
+    const [cachedWorkflows, setCachedWorkflows] = useState<WorkflowSummary[] | null>(() => loadWorkflowSummaryCache());
+    const { data: liveWorkflows } = trpc.workflow.getAllSummaries.useQuery(undefined, {
         staleTime: 60000,
         refetchOnWindowFocus: false,
     });
-    useEffect(() => {
-        setCachedWorkflows(loadWorkflowSummaryCache());
-    }, []);
     useEffect(() => {
         if (!liveWorkflows)
             return;
@@ -162,7 +159,6 @@ const Home = () => {
         saveWorkflowSummaryCache(normalizedWorkflows);
     }, [liveWorkflows]);
     const workflows = useMemo<WorkflowSummary[]>(() => (liveWorkflows as WorkflowSummary[] | undefined) ?? cachedWorkflows ?? [], [liveWorkflows, cachedWorkflows]);
-    const loading = isWorkflowsLoading && !liveWorkflows && cachedWorkflows === null;
     useEffect(() => {
         const syncViewportSize = () => {
             setViewportWidth(window.innerWidth);
@@ -224,8 +220,7 @@ const Home = () => {
     }, [workflows, search]);
     const totalPages = Math.max(1, Math.ceil(filteredWorkflows.length / pageSize));
     const currentPage = Math.min(page, totalPages);
-    const skeletonCardCount = useMemo(() => Math.min(Math.max(pageSize, gridColumns * 2), 24), [pageSize, gridColumns]);
-    const paginatedWorkflows = useMemo(() => filteredWorkflows.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredWorkflows, currentPage, pageSize]);
+const paginatedWorkflows = useMemo(() => filteredWorkflows.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredWorkflows, currentPage, pageSize]);
     useEffect(() => {
         if (page > totalPages) {
             setPage(totalPages);
@@ -455,29 +450,7 @@ const Home = () => {
           {deleteError}
         </div>)}
 
-      {loading ? (<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: skeletonCardCount }).map((_, i) => (<Card key={i} className="relative flex h-auto flex-col gap-0 overflow-hidden border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.005))] p-4 animate-pulse">
-              <div className="mb-2 flex items-start gap-2.5 pr-14">
-                <div className="h-11 w-11 rounded-xl border border-white/10 bg-white/5"/>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <div className="h-5 w-3/4 rounded bg-white/10"/>
-                  <div className="mt-2 h-3.5 w-2/3 rounded bg-white/5"/>
-                  <div className="mt-2 h-5 w-20 rounded border border-white/10 bg-white/5"/>
-                </div>
-              </div>
-              <div className="my-3 h-px w-full bg-white/8"/>
-              <div className="mb-0 grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <div className="h-3 w-12 rounded bg-white/5"/>
-                  <div className="h-4 w-10 rounded bg-white/10"/>
-                </div>
-                <div className="space-y-1 border-l border-white/10 pl-3">
-                  <div className="h-3 w-12 rounded bg-white/5"/>
-                  <div className="h-4 w-10 rounded bg-white/10"/>
-                </div>
-              </div>
-            </Card>))}
-        </div>) : workflows.length === 0 ? (<Card className="min-h-[520px] rounded-none border-0 bg-transparent p-0 shadow-none">
+      {workflows.length === 0 ? (<Card className="min-h-[520px] rounded-none border-0 bg-transparent p-0 shadow-none">
           <motion.div className="flex min-h-[520px] flex-col items-center justify-center px-6 py-14 text-center" variants={makeStaggerContainer(0.07, 0.1)} initial="hidden" animate="show">
             <motion.div variants={{ ...staggerItem, hidden: { opacity: 0, y: 12, scale: 0.9 }, show: { ...staggerItem.show, scale: 1 } }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="64px" height="64px" viewBox="0 0 18 18" className="mb-6" aria-hidden="true">

@@ -3,7 +3,7 @@ import Hero from "@/components/landing-page/hero";
 import { EditorialLines } from "@/components/landing-page/hero/EditorialLines";
 import { SectionSeparators } from "@/components/landing-page/hero/SectionSeparators";
 import { FeaturesSection } from "@/components/landing-page/hero/FeaturesSection";
-import { PlaygroundSection } from "@/components/landing-page/playground";
+import { DesktopPlayground } from "@/components/landing-page/playground/DesktopPlayground";
 import { TemplatesSection } from "@/components/landing-page/templates";
 import { PricingSection } from "@/components/landing-page/pricing";
 import { FooterCTA } from "@/components/landing-page/footer-cta";
@@ -25,11 +25,7 @@ export default function Home() {
           <div className="snap-y snap-mandatory">
             <FeaturesSection />
 
-            <div className="hidden md:block">
-              <SectionSeparators />
-
-              <PlaygroundSection />
-            </div>
+            <DesktopPlayground />
 
             <TemplatesSection />
           </div>

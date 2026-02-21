@@ -7,6 +7,17 @@ const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: st
     e.preventDefault();
     const element = document.getElementById(targetId);
     if (element) {
+        const viewport = element.closest<HTMLElement>('[data-slot="scroll-area-viewport"]');
+        if (viewport) {
+            const viewportRect = viewport.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            const baseTop = viewport.scrollTop + (elementRect.top - viewportRect.top);
+            const sectionOverflow = Math.max(0, elementRect.height - viewport.clientHeight);
+            const overflowCompensation = sectionOverflow > 0 ? Math.min(sectionOverflow, 96) : 0;
+            const top = baseTop + overflowCompensation;
+            viewport.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            return;
+        }
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 };
