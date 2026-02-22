@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { trpc } from "@/lib/trpc/client";
 import { useExecutionSocket } from "@/lib/executions/useExecutionSocket";
@@ -390,7 +390,7 @@ function ExecutionDetailSheet({ runId, open, onOpenChange, nowMs, }: {
       </SheetContent>
     </Sheet>);
 }
-export default function ExecutionsPage() {
+function ExecutionsPageContent() {
     const searchParams = useSearchParams();
     const isMobile = useIsMobile();
     const shouldReduceMotion = useReducedMotion();
@@ -549,4 +549,27 @@ export default function ExecutionsPage() {
       <ExecutionDetailSheet runId={selectedRunId} open={selectedRunId !== null} onOpenChange={(open) => { if (!open)
         setSelectedRunId(null); }} nowMs={nowMs}/>
     </div>);
+}
+function ExecutionsPageFallback() {
+    return (<div className="flex flex-col flex-1 min-h-0 -m-4 -mt-4">
+      <div className="px-4 md:px-6 pt-4 pb-4">
+        <div className="h-8 w-40 rounded bg-white/5 animate-pulse"/>
+        <div className="mt-2 h-4 w-60 rounded bg-white/5 animate-pulse"/>
+      </div>
+      <div className="flex flex-1 min-h-0">
+        <div className="hidden md:block w-64 shrink-0 p-2">
+          <div className="h-full min-h-0 overflow-hidden rounded-xl border border-[#333] bg-[#141414] p-3 space-y-2">
+            {[1, 2, 3, 4].map((item) => (<div key={item} className="h-9 rounded bg-white/5 animate-pulse"/>))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {[1, 2, 3, 4, 5].map((item) => (<div key={item} className="h-[56px] rounded-lg bg-white/5 animate-pulse"/>))}
+        </div>
+      </div>
+    </div>);
+}
+export default function ExecutionsPage() {
+    return (<Suspense fallback={<ExecutionsPageFallback />}>
+      <ExecutionsPageContent />
+    </Suspense>);
 }
