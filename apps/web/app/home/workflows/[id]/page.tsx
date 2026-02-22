@@ -100,6 +100,17 @@ function isPersistedNodeChange(change: NodeChange<Node>): boolean {
     }
     return false;
 }
+function extractCredentialId(data: unknown): string | undefined {
+    if (!data || typeof data !== 'object') {
+        return undefined;
+    }
+    const credentialValue = (data as Record<string, unknown>).credentialId;
+    if (typeof credentialValue !== 'string') {
+        return undefined;
+    }
+    const trimmed = credentialValue.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+}
 const WorkflowId = ({ params }: {
     params: Promise<{
         id: string;
@@ -153,7 +164,7 @@ const WorkflowId = ({ params }: {
     const template = useMemo(() => {
         return templateId ? (getWorkflowTemplateById(templateId) ?? null) : null;
     }, [templateId]);
-    const { data: credentials = [] } = trpc.credentials.getAll.useQuery(undefined, {
+    const { data: credentials = [], isLoading: isCredentialsLoading } = trpc.credentials.getAll.useQuery(undefined, {
         staleTime: 60000,
         refetchOnWindowFocus: false,
         trpc: {
@@ -163,6 +174,66 @@ const WorkflowId = ({ params }: {
         },
         retry: 2,
     });
+    const availableCredentials = useMemo(() => credentials.map((credential) => ({
+        id: credential.id,
+        platform: credential.platform.toLowerCase(),
+    })), [credentials]);
+    const allCredentialIds = useMemo(() => new Set(availableCredentials.map((credential) => credential.id)), [availableCredentials]);
+    const credentialIdsByPlatform = useMemo(() => {
+        const byPlatform = new Map<string, Set<string>>();
+        for (const credential of availableCredentials) {
+            const existing = byPlatform.get(credential.platform);
+            if (existing) {
+                existing.add(credential.id);
+                continue;
+            }
+            byPlatform.set(credential.platform, new Set([credential.id]));
+        }
+        return byPlatform;
+    }, [availableCredentials]);
+    const singleCredentialByPlatform = useMemo(() => {
+        const singleCredentialMap = new Map<string, string>();
+        for (const [platform, credentialIds] of credentialIdsByPlatform.entries()) {
+            if (credentialIds.size !== 1) {
+                continue;
+            }
+            const [credentialId] = Array.from(credentialIds);
+            if (credentialId) {
+                singleCredentialMap.set(platform, credentialId);
+            }
+        }
+        return singleCredentialMap;
+    }, [credentialIdsByPlatform]);
+    const templateBindingPlatformByNodeId = useMemo(() => {
+        const byNodeId = new Map<string, string>();
+        if (!template) {
+            return byNodeId;
+        }
+        for (const binding of template.requiredBindings) {
+            const platform = binding.platform.toLowerCase();
+            for (const nodeId of binding.nodeIds) {
+                if (!byNodeId.has(nodeId)) {
+                    byNodeId.set(nodeId, platform);
+                }
+            }
+        }
+        return byNodeId;
+    }, [template]);
+    const isNodeCredentialValid = useCallback((nodeId: string, credentialId: string | undefined): boolean => {
+        if (!credentialId) {
+            return false;
+        }
+        const normalizedCredentialId = credentialId.trim();
+        if (!normalizedCredentialId) {
+            return false;
+        }
+        const requiredPlatform = templateBindingPlatformByNodeId.get(nodeId);
+        if (requiredPlatform) {
+            const platformCredentialIds = credentialIdsByPlatform.get(requiredPlatform);
+            return Boolean(platformCredentialIds?.has(normalizedCredentialId));
+        }
+        return allCredentialIds.has(normalizedCredentialId);
+    }, [templateBindingPlatformByNodeId, credentialIdsByPlatform, allCredentialIds]);
     const autoCredentialByProvider = useMemo(() => {
         const byProvider: {
             openai: string[];
@@ -288,6 +359,8 @@ const WorkflowId = ({ params }: {
         },
         createWorkflowMutation,
         updateWorkflowMutation,
+        availableCredentials,
+        credentialsReady: !isCredentialsLoading,
     });
     const handleTidyUp = useCallback((layoutedNodes: Node[]) => {
         if (!isApplyingHistoryRef.current) {
@@ -305,33 +378,28 @@ const WorkflowId = ({ params }: {
             for (const [index, binding] of template.requiredBindings.entries()) {
                 const bindingKey = getTemplateBindingKey(binding, index);
                 let resolvedCredentialId: string | undefined;
+                const bindingPlatform = binding.platform.toLowerCase();
+                const validCredentialIds = credentialIdsByPlatform.get(bindingPlatform);
                 for (const nodeId of binding.nodeIds) {
                     const matchedNode = nodes.find((node) => node.id === nodeId);
                     const matchedData = matchedNode?.data && typeof matchedNode.data === 'object'
                         ? (matchedNode.data as Record<string, unknown>)
                         : null;
-                    const credentialValue = matchedData?.credentialId;
-                    if (typeof credentialValue === 'string' && credentialValue.trim().length > 0) {
-                        resolvedCredentialId = credentialValue.trim();
+                    const credentialValue = extractCredentialId(matchedData);
+                    if (credentialValue && validCredentialIds?.has(credentialValue)) {
+                        resolvedCredentialId = credentialValue;
                         break;
                     }
                 }
                 if (!resolvedCredentialId) {
-                    resolvedCredentialId =
-                        binding.platform === 'openai'
-                            ? autoCredentialByProvider.openai
-                            : binding.platform === 'anthropic'
-                                ? autoCredentialByProvider.anthropic
-                                : binding.platform === 'gemini'
-                                    ? autoCredentialByProvider.gemini
-                                    : undefined;
+                    resolvedCredentialId = singleCredentialByPlatform.get(bindingPlatform);
                 }
                 if (!resolvedCredentialId) {
                     continue;
                 }
                 tidyBindings.push({
                     bindingKey,
-                    platform: binding.platform,
+                    platform: bindingPlatform,
                     credentialId: resolvedCredentialId,
                 });
             }
@@ -358,7 +426,8 @@ const WorkflowId = ({ params }: {
         handleImmediateSave,
         nodes,
         edges,
-        autoCredentialByProvider,
+        credentialIdsByPlatform,
+        singleCredentialByPlatform,
     ]);
     const captureGraphHistory = useCallback(() => {
         if (isApplyingHistoryRef.current)
@@ -489,7 +558,7 @@ const WorkflowId = ({ params }: {
             return;
         markWorkflowChanged();
     }, [setEdges, markWorkflowChanged, captureGraphHistory]);
-    const { usage, runs, runsLoading, hasMoreRuns, loadMoreRuns, isLoadingMoreRuns, runDetail, runDetailLoading, canvasNodes, nodeStatuses, selectedStatusNodeId, setSelectedStatusNodeId, isRunPanelOpen, selectedPanelRunId, setSelectedPanelRunId, panelLiveStatuses, panelWorkflowStatus, panelWorkflowFinishedAt, closeRunPanel, toggleRunPanel, isExecutingWorkflow, handleExecuteWorkflow, handleExecuteNode, } = useWorkflowExecution({
+    const { usage, runs, runsLoading, hasMoreRuns, loadMoreRuns, isLoadingMoreRuns, runDetail, runDetailLoading, canvasNodes, nodeStatuses, selectedStatusNodeId, setSelectedStatusNodeId, isRunPanelOpen, selectedPanelRunId, setSelectedPanelRunId, panelLiveStatuses, panelWorkflowStatus, panelWorkflowFinishedAt, isPanelNodeFallbackPolling, isCronTriggerRunning, closeRunPanel, toggleRunPanel, isExecutingWorkflow, handleExecuteWorkflow, handleExecuteNode, handleExecuteTriggerNow, } = useWorkflowExecution({
         currentWorkflowId,
         nodes,
         edges,
@@ -510,6 +579,25 @@ const WorkflowId = ({ params }: {
         }
         await handleExecuteNode(nodeId);
     }, [isExecutionBlockedInProduction, handleExecuteNode]);
+    const handleExecuteTriggerNowWithEnvironmentGate = useCallback(async (source: 'cron' | 'webhook', triggerNodeId: string) => {
+        if (isExecutionBlockedInProduction) {
+            setShowExecutionBlockedDialog(true);
+            return;
+        }
+        await handleExecuteTriggerNow(source, triggerNodeId);
+    }, [isExecutionBlockedInProduction, handleExecuteTriggerNow]);
+    const runPanelExecutionsHref = useMemo(() => {
+        if (!currentWorkflowId || currentWorkflowId === 'new') {
+            return { pathname: '/home/executions' } as const;
+        }
+        return {
+            pathname: '/home/executions',
+            query: {
+                workflowId: currentWorkflowId,
+                ...(selectedPanelRunId ? { runId: selectedPanelRunId } : {}),
+            },
+        } as const;
+    }, [currentWorkflowId, selectedPanelRunId]);
     const handleAddNodeFromDrawer = useCallback((nodeType: string, label: string) => {
         const wasAdded = addNode(nodeType, label);
         if (wasAdded) {
@@ -565,9 +653,9 @@ const WorkflowId = ({ params }: {
                 ...boundNodeData,
             };
             if (options?.fillMissingOnly) {
-                if (typeof currentNodeData.credentialId === 'string' &&
-                    currentNodeData.credentialId.trim().length > 0) {
-                    mergedNodeData.credentialId = currentNodeData.credentialId;
+                const currentCredentialId = extractCredentialId(currentNodeData);
+                if (currentCredentialId && isNodeCredentialValid(node.id, currentCredentialId)) {
+                    mergedNodeData.credentialId = currentCredentialId;
                 }
                 for (const [field, value] of Object.entries(boundNodeData)) {
                     if (field === 'credentialId' || field === 'isConfigured') {
@@ -632,6 +720,7 @@ const WorkflowId = ({ params }: {
         currentWorkflowId,
         handleImmediateSave,
         utils,
+        isNodeCredentialValid,
     ]);
     const defaultTemplateFields = useMemo<Record<string, Record<string, string>>>(() => {
         if (!template?.fieldRequirements)
@@ -652,33 +741,36 @@ const WorkflowId = ({ params }: {
         }
         const bindings: CredentialBinding[] = [];
         for (const [index, binding] of template.requiredBindings.entries()) {
-            const platform = binding.platform;
-            const matchingCredentials = credentials.filter((credential) => credential.platform.toLowerCase() === platform);
-            if (matchingCredentials.length !== 1) {
+            const platform = binding.platform.toLowerCase();
+            const credentialId = singleCredentialByPlatform.get(platform);
+            if (!credentialId) {
                 return null;
             }
             bindings.push({
                 bindingKey: getTemplateBindingKey(binding, index),
                 platform,
-                credentialId: matchingCredentials[0]!.id,
+                credentialId,
             });
         }
         return bindings;
-    }, [template, credentials]);
+    }, [template, singleCredentialByPlatform]);
     useEffect(() => {
         if (!workflowData || !template || !currentWorkflowId || currentWorkflowId === 'new')
             return;
         if (!autoTemplateBindings || autoTemplateBindings.length === 0)
             return;
+        if (isCredentialsLoading)
+            return;
         if (autoTemplateSetupAppliedRef.current.has(currentWorkflowId))
             return;
-        const requiredNodeIds = new Set(template.requiredBindings.flatMap((binding) => binding.nodeIds));
-        const hasMissingCredentialBinding = nodes.some((node) => {
-            if (!requiredNodeIds.has(node.id))
+        const nodeById = new Map(nodes.map((node) => [node.id, node]));
+        const hasMissingCredentialBinding = template.requiredBindings.some((binding) => binding.nodeIds.some((nodeId) => {
+            const node = nodeById.get(nodeId);
+            if (!node)
                 return false;
-            const nodeData = node.data as Record<string, unknown> | undefined;
-            return !(typeof nodeData?.credentialId === 'string' && nodeData.credentialId.trim().length > 0);
-        });
+            const credentialId = extractCredentialId(node.data);
+            return !isNodeCredentialValid(nodeId, credentialId);
+        }));
         if (!hasMissingCredentialBinding)
             return;
         autoTemplateSetupAppliedRef.current.add(currentWorkflowId);
@@ -695,6 +787,8 @@ const WorkflowId = ({ params }: {
         defaultTemplateFields,
         handleTemplateCredentialSetup,
         setShowTemplateSetup,
+        isCredentialsLoading,
+        isNodeCredentialValid,
     ]);
     useEffect(() => {
         nodesRef.current = nodes;
@@ -843,7 +937,7 @@ const WorkflowId = ({ params }: {
                 <div className="flex-1 relative">
                   <Drawer direction="right" open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                     <div className="relative w-full h-full">
-                      <WorkflowCanvas nodes={canvasNodes} edges={edges} onNodesChange={handleNodesChange} onEdgesChange={handleEdgesChange} onConnect={onConnect} onExecute={handleExecuteWorkflowWithEnvironmentGate} isExecuting={isExecutingWorkflow} onOpenDrawer={() => setIsDrawerOpen(prev => !prev)} onTidyUp={handleTidyUp}/>
+                      <WorkflowCanvas nodes={canvasNodes} edges={edges} onNodesChange={handleNodesChange} onEdgesChange={handleEdgesChange} onConnect={onConnect} onExecute={handleExecuteWorkflowWithEnvironmentGate} onExecuteTriggerNow={handleExecuteTriggerNowWithEnvironmentGate} isExecuting={isExecutingWorkflow} isCronTriggerRunning={isCronTriggerRunning} onOpenDrawer={() => setIsDrawerOpen(prev => !prev)} onTidyUp={handleTidyUp}/>
 
                       {nodes.length === 0 && <EmptyCanvasPrompt />}
                       {nodes.length > 0 && <AddNodeButton showPulse={nodes.length === 1}/>}
@@ -854,8 +948,8 @@ const WorkflowId = ({ params }: {
                 </div>
 
                 <AnimatePresence mode="wait">
-                  {isRunPanelOpen && (<motion.div key="run-panel" initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 28 }} className="overflow-hidden shrink-0 h-full bg-[#101010]">
-                      <RunPanel runs={runs} isLoading={runsLoading} selectedRunId={selectedPanelRunId} onSelectRun={setSelectedPanelRunId} runDetail={runDetail} runDetailLoading={runDetailLoading} liveStatuses={panelLiveStatuses} workflowStatus={panelWorkflowStatus} workflowFinishedAt={panelWorkflowFinishedAt} selectedNodeId={selectedStatusNodeId} onSelectNode={setSelectedStatusNodeId} onClose={closeRunPanel} hasNextPage={hasMoreRuns} fetchNextPage={loadMoreRuns} isFetchingNextPage={isLoadingMoreRuns}/>
+                  {isRunPanelOpen && (<motion.div key="run-panel" initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 28 }} className="overflow-hidden shrink-0 h-full min-h-0 bg-[#101010]">
+                      <RunPanel runs={runs} isLoading={runsLoading} selectedRunId={selectedPanelRunId} onSelectRun={setSelectedPanelRunId} runDetail={runDetail} runDetailLoading={runDetailLoading} liveStatuses={panelLiveStatuses} workflowStatus={panelWorkflowStatus} workflowFinishedAt={panelWorkflowFinishedAt} selectedNodeId={selectedStatusNodeId} onSelectNode={setSelectedStatusNodeId} onClose={closeRunPanel} hasNextPage={hasMoreRuns} fetchNextPage={loadMoreRuns} isFetchingNextPage={isLoadingMoreRuns} isNodeFallbackPolling={isPanelNodeFallbackPolling} executionsHref={runPanelExecutionsHref}/>
                     </motion.div>)}
                 </AnimatePresence>
               </div>

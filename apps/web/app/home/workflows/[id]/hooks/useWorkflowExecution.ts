@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction, } from 'react';
 import type { Edge, Node } from '@xyflow/react';
 import { trpc } from '@/lib/trpc/client';
-import { subscribeToExecutionRun } from '@/lib/executions/executionSocketClient';
+import { primeExecutionSocketAuth, subscribeToExecutionRun } from '@/lib/executions/executionSocketClient';
 import type { RunPanelDetail, RunPanelListItem } from '../components/RunPanel';
 interface UseWorkflowExecutionParams {
     currentWorkflowId: string;
@@ -33,16 +33,65 @@ interface UseWorkflowExecutionResult {
     panelLiveStatuses: Record<string, string>;
     panelWorkflowStatus: string | null;
     panelWorkflowFinishedAt: Date | null;
+    activeNodeStatusSource: 'socket' | 'polling' | 'idle';
+    isActiveNodeFallbackPolling: boolean;
+    isPanelNodeFallbackPolling: boolean;
+    isCronTriggerRunning: boolean;
     closeRunPanel: () => void;
     toggleRunPanel: () => void;
     isExecutingWorkflow: boolean;
     handleExecuteWorkflow: () => Promise<void>;
     handleExecuteNode: (nodeId: string) => Promise<void>;
+    handleExecuteTriggerNow: (source: 'cron' | 'webhook', triggerNodeId: string) => Promise<void>;
 }
 const RUN_PANEL_FALLBACK_POLL_MS = 2000;
-const RUN_PANEL_CONNECTED_SYNC_MS = 1500;
+const WORKFLOW_TERMINAL_STATUSES = new Set(['Success', 'Failure']);
+interface NodeRunStatusLike {
+    nodeId?: unknown;
+    status?: unknown;
+}
+function isWorkflowTerminalStatus(status: string | null | undefined): boolean {
+    return typeof status === 'string' && WORKFLOW_TERMINAL_STATUSES.has(status);
+}
+function mapNodeStatusesFromNodeRuns(nodeRuns: NodeRunStatusLike[] | null | undefined): Record<string, string> {
+    if (!Array.isArray(nodeRuns) || nodeRuns.length === 0) {
+        return {};
+    }
+    const statuses: Record<string, string> = {};
+    for (const nodeRun of nodeRuns) {
+        if (typeof nodeRun.nodeId !== 'string' || typeof nodeRun.status !== 'string') {
+            continue;
+        }
+        statuses[nodeRun.nodeId] = nodeRun.status;
+    }
+    return statuses;
+}
 interface ExecutionStreamOptions {
     onWorkflowTerminal?: (status: 'Success' | 'Failure') => void;
+    onSocketStatus?: (status: 'connected' | 'disconnected' | 'reconnecting') => void;
+}
+interface ExecutionStreamBootstrapLike {
+    token?: unknown;
+    wsUrl?: unknown;
+    expiresInSeconds?: unknown;
+}
+interface ExecuteMutationResultLike {
+    runId: string;
+    stream?: ExecutionStreamBootstrapLike | null;
+}
+function primeSocketAuthFromExecuteResult(result: ExecuteMutationResultLike): void {
+    const bootstrap = result.stream;
+    if (!bootstrap || typeof bootstrap !== 'object') {
+        return;
+    }
+    if (typeof bootstrap.token !== 'string' || bootstrap.token.trim().length === 0) {
+        return;
+    }
+    primeExecutionSocketAuth(result.runId, {
+        token: bootstrap.token,
+        wsUrl: typeof bootstrap.wsUrl === 'string' ? bootstrap.wsUrl : undefined,
+        expiresInSeconds: typeof bootstrap.expiresInSeconds === 'number' ? bootstrap.expiresInSeconds : undefined,
+    });
 }
 export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleImmediateSave, }: UseWorkflowExecutionParams): UseWorkflowExecutionResult {
     const utils = trpc.useUtils();
@@ -55,9 +104,30 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
     const [panelWorkflowStatus, setPanelWorkflowStatus] = useState<string | null>(null);
     const [panelWorkflowFinishedAt, setPanelWorkflowFinishedAt] = useState<Date | null>(null);
     const [isPanelStreamConnected, setIsPanelStreamConnected] = useState(false);
+    const [isActiveRunStreamConnected, setIsActiveRunStreamConnected] = useState(false);
     const [activeWorkflowRunId, setActiveWorkflowRunId] = useState<string | null>(null);
     const [isWorkflowRunActive, setIsWorkflowRunActive] = useState(false);
+    const [activeTriggerSource, setActiveTriggerSource] = useState<'cron' | 'webhook' | null>(null);
     const activeExecutionSubscriptionsRef = useRef<Map<string, () => void>>(new Map());
+    const disposeRunSubscription = useCallback((runId: string) => {
+        const key = `run:${runId}`;
+        const dispose = activeExecutionSubscriptionsRef.current.get(key);
+        if (!dispose) {
+            return;
+        }
+        dispose();
+        activeExecutionSubscriptionsRef.current.delete(key);
+    }, []);
+    const disposeAllRunSubscriptions = useCallback(() => {
+        const subscriptions = activeExecutionSubscriptionsRef.current;
+        for (const [key, dispose] of subscriptions.entries()) {
+            if (!key.startsWith("run:")) {
+                continue;
+            }
+            dispose();
+            subscriptions.delete(key);
+        }
+    }, []);
     const usageQuery = trpc.execution.getUsage.useQuery(undefined, {
         refetchOnWindowFocus: false,
         trpc: {
@@ -72,14 +142,31 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         refetchOnWindowFocus: false,
     });
+    const refetchRuns = runsQuery.refetch;
     const recentRuns = useMemo<RunPanelListItem[]>(() => (runsQuery.data?.pages.flatMap((page) => page.runs) ?? []) as RunPanelListItem[], [runsQuery.data]);
+    const shouldPollActiveWorkflowRun = Boolean(activeWorkflowRunId && isWorkflowRunActive && !isActiveRunStreamConnected);
     const runDetailQuery = trpc.execution.getById.useQuery({ runId: selectedPanelRunId ?? '' }, { enabled: Boolean(selectedPanelRunId), refetchOnWindowFocus: false });
+    const refetchRunDetail = runDetailQuery.refetch;
     const activeWorkflowRunQuery = trpc.execution.getById.useQuery({ runId: activeWorkflowRunId ?? '' }, {
         enabled: Boolean(activeWorkflowRunId),
         refetchOnWindowFocus: false,
-        refetchInterval: isWorkflowRunActive ? 2000 : false,
+        refetchInterval: shouldPollActiveWorkflowRun ? RUN_PANEL_FALLBACK_POLL_MS : false,
     });
+    const refetchActiveWorkflowRun = activeWorkflowRunQuery.refetch;
     const runDetail = useMemo<RunPanelDetail | null>(() => (runDetailQuery.data ? (runDetailQuery.data as RunPanelDetail) : null), [runDetailQuery.data]);
+    const panelEffectiveWorkflowStatus = panelWorkflowStatus || runDetail?.status || null;
+    const isPanelNodeFallbackPolling = Boolean(selectedPanelRunId && !isWorkflowTerminalStatus(panelEffectiveWorkflowStatus) && !isPanelStreamConnected);
+    const panelPolledStatuses = useMemo(() => mapNodeStatusesFromNodeRuns(runDetail?.nodeRuns as NodeRunStatusLike[] | undefined), [runDetail?.nodeRuns]);
+    const activeWorkflowStatus = activeWorkflowRunQuery.data?.status ?? null;
+    const isActiveWorkflowTerminal = isWorkflowTerminalStatus(activeWorkflowStatus);
+    const activePolledStatuses = useMemo(() => mapNodeStatusesFromNodeRuns(activeWorkflowRunQuery.data?.nodeRuns as NodeRunStatusLike[] | undefined), [activeWorkflowRunQuery.data?.nodeRuns]);
+    const isActiveNodeFallbackPolling = Boolean(activeWorkflowRunId && isWorkflowRunActive && !isActiveWorkflowTerminal && !isActiveRunStreamConnected);
+    const isCronTriggerRunning = activeTriggerSource === 'cron' && isWorkflowRunActive;
+    const activeNodeStatusSource: 'socket' | 'polling' | 'idle' = !activeWorkflowRunId || !isWorkflowRunActive || isActiveWorkflowTerminal
+        ? 'idle'
+        : isActiveRunStreamConnected
+            ? 'socket'
+            : 'polling';
     const usage = useMemo<UsageSnapshot | null>(() => usageQuery.data
         ? {
             runCount: usageQuery.data.runCount,
@@ -107,8 +194,7 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
             return;
         }
         const subscriptions = activeExecutionSubscriptionsRef.current;
-        const effectiveStatus = panelWorkflowStatus || runDetail?.status;
-        if (effectiveStatus === 'Success' || effectiveStatus === 'Failure') {
+        if (isWorkflowTerminalStatus(panelEffectiveWorkflowStatus)) {
             return;
         }
         setIsPanelStreamConnected(false);
@@ -132,8 +218,8 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
                 if (data.status === 'Success' || data.status === 'Failure') {
                     setPanelWorkflowFinishedAt(new Date(data.timestamp ?? Date.now()));
                     setIsPanelStreamConnected(false);
-                    runDetailQuery.refetch();
-                    runsQuery.refetch();
+                    void refetchRunDetail();
+                    void refetchRuns();
                 }
             }
         });
@@ -147,7 +233,7 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
             }
             setIsPanelStreamConnected(false);
         };
-    }, [selectedPanelRunId, panelWorkflowStatus, runDetail?.status, runDetailQuery, runsQuery]);
+    }, [selectedPanelRunId, refetchRunDetail, refetchRuns]);
     useEffect(() => {
         setPanelLiveStatuses({});
         setPanelWorkflowStatus(null);
@@ -155,19 +241,48 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
         setIsPanelStreamConnected(false);
     }, [selectedPanelRunId]);
     useEffect(() => {
-        if (!selectedPanelRunId)
+        if (!selectedPanelRunId || !isPanelNodeFallbackPolling) {
             return;
-        const effectiveStatus = panelWorkflowStatus || runDetail?.status;
-        if (effectiveStatus !== 'Pending')
+        }
+        if (Object.keys(panelPolledStatuses).length === 0) {
             return;
+        }
+        setPanelLiveStatuses(panelPolledStatuses);
+    }, [selectedPanelRunId, isPanelNodeFallbackPolling, panelPolledStatuses]);
+    useEffect(() => {
+        if (!selectedPanelRunId || !isPanelNodeFallbackPolling) {
+            return;
+        }
+        void refetchRunDetail();
+        void refetchRuns();
         const interval = setInterval(() => {
-            runDetailQuery.refetch();
-            if (!isPanelStreamConnected) {
-                runsQuery.refetch();
-            }
-        }, isPanelStreamConnected ? RUN_PANEL_CONNECTED_SYNC_MS : RUN_PANEL_FALLBACK_POLL_MS);
+            void refetchRunDetail();
+            void refetchRuns();
+        }, RUN_PANEL_FALLBACK_POLL_MS);
         return () => clearInterval(interval);
-    }, [selectedPanelRunId, panelWorkflowStatus, runDetail?.status, runDetailQuery, runsQuery, isPanelStreamConnected]);
+    }, [selectedPanelRunId, isPanelNodeFallbackPolling, refetchRunDetail, refetchRuns]);
+    useEffect(() => {
+        if (!activeWorkflowRunId || !isActiveNodeFallbackPolling) {
+            return;
+        }
+        if (Object.keys(activePolledStatuses).length === 0) {
+            return;
+        }
+        setNodeStatuses(activePolledStatuses);
+    }, [activeWorkflowRunId, isActiveNodeFallbackPolling, activePolledStatuses]);
+    useEffect(() => {
+        if (!activeWorkflowRunId || !isActiveWorkflowTerminal) {
+            return;
+        }
+        if (Object.keys(activePolledStatuses).length === 0) {
+            return;
+        }
+        // Reconcile final persisted statuses for the last nodes even if socket terminal arrives before node terminal events.
+        setNodeStatuses(activePolledStatuses);
+    }, [activeWorkflowRunId, isActiveWorkflowTerminal, activePolledStatuses]);
+    useEffect(() => {
+        setIsActiveRunStreamConnected(false);
+    }, [activeWorkflowRunId]);
     useEffect(() => {
         if (!runDetail)
             return;
@@ -187,6 +302,10 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
             activeExecutionSubscriptionsRef.current.delete(key);
         }
         const unsubscribe = subscribeToExecutionRun(runId, (data) => {
+            if (data.type === 'socket') {
+                options?.onSocketStatus?.(data.status);
+                return;
+            }
             if (data.type === 'node' &&
                 typeof data.nodeId === 'string' &&
                 typeof data.status === 'string') {
@@ -200,11 +319,11 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
                 }
                 options?.onWorkflowTerminal?.(data.status);
                 utils.execution.getUsage.invalidate();
-                runsQuery.refetch();
+                void refetchRuns();
             }
         });
         activeExecutionSubscriptionsRef.current.set(key, unsubscribe);
-    }, [utils, runsQuery]);
+    }, [utils, refetchRuns]);
     const handleExecuteWorkflow = useCallback(async () => {
         if (currentWorkflowId === 'new')
             return;
@@ -222,16 +341,23 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
             const result = await executeWorkflowMutation.mutateAsync({
                 workflowId: currentWorkflowId,
             });
+            primeSocketAuthFromExecuteResult(result as ExecuteMutationResultLike);
+            disposeAllRunSubscriptions();
             setIsWorkflowRunActive(true);
+            setActiveTriggerSource(null);
             setActiveWorkflowRunId(result.runId);
+            setIsActiveRunStreamConnected(false);
             setIsRunPanelOpen(true);
             setSelectedPanelRunId(result.runId);
             openExecutionStream(result.runId, (nodeId, status) => {
                 setNodeStatuses((prev) => ({ ...prev, [nodeId]: status }));
             }, {
+                onSocketStatus: (status) => {
+                    setIsActiveRunStreamConnected(status === 'connected');
+                },
                 onWorkflowTerminal: () => {
-                    setIsWorkflowRunActive(false);
-                    setActiveWorkflowRunId((current) => (current === result.runId ? null : current));
+                    setIsActiveRunStreamConnected(false);
+                    void refetchActiveWorkflowRun();
                 },
             });
         }
@@ -246,6 +372,8 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
         executeWorkflowMutation,
         isWorkflowRunActive,
         openExecutionStream,
+        disposeAllRunSubscriptions,
+        refetchActiveWorkflowRun,
     ]);
     useEffect(() => {
         if (!activeWorkflowRunId)
@@ -253,9 +381,12 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
         const status = activeWorkflowRunQuery.data?.status;
         if (status !== 'Success' && status !== 'Failure')
             return;
+        disposeRunSubscription(activeWorkflowRunId);
         setIsWorkflowRunActive(false);
+        setActiveTriggerSource(null);
+        setIsActiveRunStreamConnected(false);
         setActiveWorkflowRunId(null);
-    }, [activeWorkflowRunId, activeWorkflowRunQuery.data?.status]);
+    }, [activeWorkflowRunId, activeWorkflowRunQuery.data?.status, disposeRunSubscription]);
     const handleExecuteNode = useCallback(async (nodeId: string) => {
         if (currentWorkflowId === 'new')
             return;
@@ -267,6 +398,8 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
                 workflowId: currentWorkflowId,
                 nodeId,
             });
+            primeSocketAuthFromExecuteResult(result as ExecuteMutationResultLike);
+            disposeAllRunSubscriptions();
             openExecutionStream(result.runId, (streamNodeId, status) => {
                 setNodeStatuses((prev) => ({ ...prev, [streamNodeId]: status }));
             });
@@ -275,7 +408,54 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
             console.error('Failed to execute node:', error);
             setNodeStatuses((prev) => ({ ...prev, [nodeId]: 'Failed' }));
         }
-    }, [currentWorkflowId, handleImmediateSave, executeWorkflowMutation, openExecutionStream]);
+    }, [currentWorkflowId, handleImmediateSave, executeWorkflowMutation, openExecutionStream, disposeAllRunSubscriptions]);
+    const handleExecuteTriggerNow = useCallback(async (source: 'cron' | 'webhook', triggerNodeId: string) => {
+        if (currentWorkflowId === 'new')
+            return;
+        if (executeWorkflowMutation.isPending || isWorkflowRunActive)
+            return;
+        await handleImmediateSave();
+        try {
+            setNodeStatuses({});
+            setSelectedStatusNodeId(null);
+            const result = await executeWorkflowMutation.mutateAsync({
+                workflowId: currentWorkflowId,
+                triggerSource: source,
+                triggerNodeId,
+            });
+            primeSocketAuthFromExecuteResult(result as ExecuteMutationResultLike);
+            disposeAllRunSubscriptions();
+            setIsWorkflowRunActive(true);
+            setActiveTriggerSource(source);
+            setActiveWorkflowRunId(result.runId);
+            setIsActiveRunStreamConnected(false);
+            setIsRunPanelOpen(true);
+            setSelectedPanelRunId(result.runId);
+            openExecutionStream(result.runId, (nodeId, status) => {
+                setNodeStatuses((prev) => ({ ...prev, [nodeId]: status }));
+            }, {
+                onSocketStatus: (status) => {
+                    setIsActiveRunStreamConnected(status === 'connected');
+                },
+                onWorkflowTerminal: () => {
+                    setIsActiveRunStreamConnected(false);
+                    void refetchActiveWorkflowRun();
+                },
+            });
+        }
+        catch (error) {
+            console.error('Failed to execute trigger run now:', error);
+            setActiveTriggerSource(null);
+        }
+    }, [
+        currentWorkflowId,
+        executeWorkflowMutation,
+        isWorkflowRunActive,
+        handleImmediateSave,
+        disposeAllRunSubscriptions,
+        openExecutionStream,
+        refetchActiveWorkflowRun,
+    ]);
     const loadMoreRuns = useCallback(() => {
         void runsQuery.fetchNextPage();
     }, [runsQuery]);
@@ -307,10 +487,15 @@ export function useWorkflowExecution({ currentWorkflowId, nodes, edges, handleIm
         panelLiveStatuses,
         panelWorkflowStatus,
         panelWorkflowFinishedAt,
+        activeNodeStatusSource,
+        isActiveNodeFallbackPolling,
+        isPanelNodeFallbackPolling,
+        isCronTriggerRunning,
         closeRunPanel,
         toggleRunPanel,
         isExecutingWorkflow: executeWorkflowMutation.isPending || isWorkflowRunActive,
         handleExecuteWorkflow,
         handleExecuteNode,
+        handleExecuteTriggerNow,
     };
 }

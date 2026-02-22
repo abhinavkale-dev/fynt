@@ -141,11 +141,20 @@ const Home = () => {
     } | null>(null);
     const [pendingDeleteWorkflowId, setPendingDeleteWorkflowId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
-    const [cachedWorkflows, setCachedWorkflows] = useState<WorkflowSummary[] | null>(() => loadWorkflowSummaryCache());
+    const [cachedWorkflows, setCachedWorkflows] = useState<WorkflowSummary[] | null>(null);
     const { data: liveWorkflows } = trpc.workflow.getAllSummaries.useQuery(undefined, {
         staleTime: 60000,
         refetchOnWindowFocus: false,
     });
+    useEffect(() => {
+        if (liveWorkflows) {
+            return;
+        }
+        const cached = loadWorkflowSummaryCache();
+        if (cached) {
+            setCachedWorkflows(cached);
+        }
+    }, [liveWorkflows]);
     useEffect(() => {
         if (!liveWorkflows)
             return;

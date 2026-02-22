@@ -3,12 +3,14 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { getWorkflowQueue } from "@repo/shared/queue";
 import { isExecutionDisabledForRuntime } from "@repo/shared/automation-flags";
+import { signExecutionStreamToken } from "@repo/shared/execution-stream-token";
 import { validateGraphShape } from "@/lib/workflow/graphValidation";
 import { RunReservationLockTimeoutError, withUserRunReservationLock, } from "@repo/shared/run-reservation-lock";
 const MAX_WORKFLOW_TITLE_LENGTH = 200;
 const MAX_WORKFLOW_NODES = 200;
 const MAX_WORKFLOW_EDGES = 500;
 const MAX_WORKFLOW_ACTIONS = 200;
+const EXECUTION_STREAM_TOKEN_TTL_SECONDS = 5 * 60;
 const jsonValueSchema = z.unknown();
 const workflowActionInputSchema = z.object({
     id: z.string().min(1).max(100),
@@ -125,6 +127,54 @@ function assertTemplateGraphNotEmptyOrThrow(nodes: unknown[], templateId: string
             message: `Invalid workflow graph for ${context}: template workflow "${templateId}" ` +
                 `cannot be saved with an empty node graph.`,
         });
+    }
+}
+function resolveExecutionStreamSigningSecret(): string {
+    const secret = process.env.BETTER_AUTH_SECRET?.trim() ||
+        process.env.EXECUTION_STREAM_SIGNING_SECRET?.trim();
+    if (!secret) {
+        throw new Error("Execution stream signing secret is required. Set BETTER_AUTH_SECRET or EXECUTION_STREAM_SIGNING_SECRET.");
+    }
+    return secret;
+}
+function normalizeConfiguredWsBaseUrl(value: string): string {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        throw new Error("Execution websocket URL is empty.");
+    }
+    let parsed: URL;
+    try {
+        parsed = new URL(trimmed);
+    }
+    catch {
+        const withProtocol = trimmed.startsWith("//")
+            ? `ws:${trimmed}`
+            : `ws://${trimmed.replace(/^\/+/, "")}`;
+        parsed = new URL(withProtocol);
+    }
+    if (parsed.protocol === "http:") {
+        parsed.protocol = "ws:";
+    }
+    else if (parsed.protocol === "https:") {
+        parsed.protocol = "wss:";
+    }
+    else if (parsed.protocol !== "ws:" && parsed.protocol !== "wss:") {
+        throw new Error(`Unsupported websocket protocol: ${parsed.protocol}`);
+    }
+    return parsed.toString().replace(/\/$/, "");
+}
+function resolveExecutionStreamWsBaseUrlFromEnv(): string | undefined {
+    const configured = process.env.NEXT_PUBLIC_EXECUTION_WS_URL?.trim() ||
+        process.env.EXECUTION_WS_URL?.trim();
+    if (!configured) {
+        return undefined;
+    }
+    try {
+        return normalizeConfiguredWsBaseUrl(configured);
+    }
+    catch (error) {
+        console.warn("[workflow.execute] Invalid EXECUTION_WS_URL/NEXT_PUBLIC_EXECUTION_WS_URL. Falling back to client defaults.", error);
+        return undefined;
     }
 }
 const getAll = protectedProcedure.query(async ({ ctx }) => {
@@ -387,6 +437,8 @@ const execute = protectedProcedure
     .input(z.object({
     workflowId: z.string(),
     nodeId: z.string().optional(),
+    triggerSource: z.enum(['cron', 'webhook']).optional(),
+    triggerNodeId: z.string().optional(),
 }))
     .mutation(async ({ ctx, input }) => {
     if (isExecutionDisabledForRuntime()) {
@@ -410,15 +462,63 @@ const execute = protectedProcedure
             type?: unknown;
             data?: {
                 isActive?: unknown;
+                isConfigured?: unknown;
             } | null;
         }>
         : [];
+    if (input.nodeId && (input.triggerSource || input.triggerNodeId)) {
+        throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Provide either nodeId (single-node run) or triggerSource/triggerNodeId (trigger run), not both.',
+        });
+    }
+    if ((input.triggerSource && !input.triggerNodeId) || (!input.triggerSource && input.triggerNodeId)) {
+        throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'triggerSource and triggerNodeId must be provided together.',
+        });
+    }
     if (input.nodeId) {
         const nodeExists = workflowNodes.some((node) => node?.id === input.nodeId);
         if (!nodeExists) {
             throw new TRPCError({
                 code: 'BAD_REQUEST',
                 message: 'Node does not belong to this workflow',
+            });
+        }
+    }
+    else if (input.triggerSource && input.triggerNodeId) {
+        const triggerNode = workflowNodes.find((node) => node?.id === input.triggerNodeId);
+        if (!triggerNode) {
+            throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: 'Trigger node does not belong to this workflow',
+            });
+        }
+        const expectedType = input.triggerSource === 'cron' ? 'cronTrigger' : 'webhookTrigger';
+        const actualType = typeof triggerNode.type === 'string' ? triggerNode.type : '';
+        if (actualType !== expectedType) {
+            throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: `Selected node is not a ${expectedType} node.`,
+            });
+        }
+        const nodeData = triggerNode.data && typeof triggerNode.data === 'object'
+            ? (triggerNode.data as {
+                isActive?: unknown;
+                isConfigured?: unknown;
+            })
+            : null;
+        if (nodeData?.isActive === false) {
+            throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: 'Selected trigger node is deactivated.',
+            });
+        }
+        if (nodeData?.isConfigured !== true) {
+            throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: 'Selected trigger node is not configured yet.',
             });
         }
     }
@@ -507,10 +607,36 @@ const execute = protectedProcedure
             return tx.workflowRun.create({
                 data: {
                     workflowId: input.workflowId,
-                    metadata: {
-                        source: input.nodeId ? 'manual-node' : 'manual',
-                        ...(input.nodeId ? { nodeId: input.nodeId } : {}),
-                    },
+                    metadata: (() => {
+                        const nowIso = new Date().toISOString();
+                        if (input.nodeId) {
+                            return {
+                                source: 'manual-node',
+                                nodeId: input.nodeId,
+                            };
+                        }
+                        if (input.triggerSource && input.triggerNodeId) {
+                            if (input.triggerSource === 'cron') {
+                                return {
+                                    source: 'cron',
+                                    nodeId: input.triggerNodeId,
+                                    scheduledAt: nowIso,
+                                };
+                            }
+                            return {
+                                source: 'webhook',
+                                nodeId: input.triggerNodeId,
+                                payload: {},
+                                query: {},
+                                headers: {},
+                                receivedAt: nowIso,
+                                ip: 'manual-run-now',
+                            };
+                        }
+                        return {
+                            source: 'manual',
+                        };
+                    })(),
                 },
             });
         }));
@@ -549,7 +675,32 @@ const execute = protectedProcedure
             message: 'Failed to enqueue workflow run',
         });
     }
-    return { runId: workflowRun.id, workflowId: input.workflowId };
+    let stream: {
+        token: string;
+        wsUrl?: string;
+        expiresInSeconds: number;
+    } | undefined;
+    try {
+        const token = signExecutionStreamToken({
+            runId: workflowRun.id,
+            userId: ctx.userId!,
+            ttlSeconds: EXECUTION_STREAM_TOKEN_TTL_SECONDS,
+        }, resolveExecutionStreamSigningSecret());
+        const wsUrl = resolveExecutionStreamWsBaseUrlFromEnv();
+        stream = {
+            token,
+            expiresInSeconds: EXECUTION_STREAM_TOKEN_TTL_SECONDS,
+            ...(wsUrl ? { wsUrl } : {}),
+        };
+    }
+    catch (error) {
+        console.warn("[workflow.execute] Failed to prepare execution stream bootstrap token.", error);
+    }
+    return {
+        runId: workflowRun.id,
+        workflowId: input.workflowId,
+        ...(stream ? { stream } : {}),
+    };
 });
 export const workflowRouter = router({
     getAll,

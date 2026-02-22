@@ -17,7 +17,9 @@ interface WorkflowCanvasProps {
     onEdgesChange: OnEdgesChange;
     onConnect: (connection: Connection) => void;
     onExecute?: () => void;
+    onExecuteTriggerNow?: (source: 'cron' | 'webhook', triggerNodeId: string) => void;
     isExecuting?: boolean;
+    isCronTriggerRunning?: boolean;
     onOpenDrawer?: () => void;
     onTidyUp?: (layoutedNodes: Node[]) => void;
 }
@@ -74,15 +76,61 @@ function CustomControls({ isInteractive, setIsInteractive, hasNodes, onTidyUp }:
       </div>
     </Panel>);
 }
-const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ nodes, edges, onNodesChange, onEdgesChange, onConnect, onExecute, isExecuting, onOpenDrawer, onTidyUp, }) => {
+const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ nodes, edges, onNodesChange, onEdgesChange, onConnect, onExecute, onExecuteTriggerNow, isExecuting, isCronTriggerRunning = false, onOpenDrawer, onTidyUp, }) => {
     const memoizedNodeTypes = useMemo(() => nodeTypes, []);
     const [isInteractive, setIsInteractive] = useState(true);
     const hasNodes = nodes.length > 0;
     const hasSelectedNodes = nodes.some(n => n.selected);
+    const hasActiveManualTrigger = useMemo(() => nodes.some((node) => {
+        if (node.type !== 'manualTrigger' && node.type !== 'triggerNode') {
+            return false;
+        }
+        const nodeData = node.data && typeof node.data === 'object'
+            ? (node.data as Record<string, unknown>)
+            : null;
+        return nodeData?.isActive !== false;
+    }), [nodes]);
+    const runNowCandidate = useMemo<{
+        source: 'cron' | 'webhook';
+        nodeId: string;
+    } | null>(() => {
+        if (hasActiveManualTrigger) {
+            return null;
+        }
+        const isRunnableTriggerNode = (node: Node): boolean => {
+            const nodeData = node.data && typeof node.data === 'object'
+                ? (node.data as Record<string, unknown>)
+                : null;
+            return nodeData?.isActive !== false && nodeData?.isConfigured === true;
+        };
+        const activeCron = nodes.find((node) => node.type === 'cronTrigger' && isRunnableTriggerNode(node));
+        if (activeCron) {
+            return { source: 'cron', nodeId: activeCron.id };
+        }
+        const activeWebhook = nodes.find((node) => node.type === 'webhookTrigger' && isRunnableTriggerNode(node));
+        if (activeWebhook) {
+            return { source: 'webhook', nodeId: activeWebhook.id };
+        }
+        return null;
+    }, [nodes, hasActiveManualTrigger]);
+    const canRunNowViaTrigger = Boolean(runNowCandidate && onExecuteTriggerNow);
+    const disableManualExecute = !hasActiveManualTrigger && canRunNowViaTrigger;
+    const isCronRunButton = runNowCandidate?.source === 'cron';
+    const isCronRunButtonActive = isCronRunButton && isCronTriggerRunning;
+    const handleRunNowViaTrigger = useCallback(() => {
+        if (!runNowCandidate || !onExecuteTriggerNow) {
+            return;
+        }
+        if (runNowCandidate.source === 'cron') {
+            return;
+        }
+        onExecuteTriggerNow(runNowCandidate.source, runNowCandidate.nodeId);
+    }, [runNowCandidate, onExecuteTriggerNow]);
     const validation = useMemo(() => {
         return validateWorkflow(nodes.filter(n => n.type).map(n => ({ id: n.id, type: n.type!, data: n.data })), edges.map(e => ({ source: e.source, target: e.target, sourceHandle: e.sourceHandle })));
     }, [nodes, edges]);
     const hasValidationErrors = validation.issues.some(i => i.type === 'error');
+    const isRunNowButtonDisabled = isExecuting || hasValidationErrors || isCronRunButton;
     const hasValidationWarnings = validation.issues.some(i => i.type === 'warning');
     const { fitView, setNodes: rfSetNodes, getNodes } = useReactFlow();
     const handleSelectAll = useCallback(() => {
@@ -130,35 +178,64 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ nodes, edges, onNodesCh
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button onClick={onExecute} disabled={isExecuting || hasValidationErrors} className={`flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${hasValidationErrors
+                      <div className="flex items-center gap-2">
+                        <button onClick={onExecute} disabled={isExecuting || hasValidationErrors || disableManualExecute} className={`flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${hasValidationErrors || disableManualExecute
                 ? 'bg-gray-600 cursor-not-allowed'
                 : hasValidationWarnings
                     ? 'bg-yellow-600 hover:bg-yellow-700'
                     : 'bg-orange-500 hover:bg-orange-600'}`}>
-                        {isExecuting ? (<>
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Executing workflow...</span>
-                          </>) : hasValidationErrors ? (<>
-                            <AlertCircle className="size-4"/>
-                            <span>Cannot Execute</span>
-                          </>) : hasValidationWarnings ? (<>
-                            <AlertTriangle className="size-4"/>
-                            <span>Execute (with warnings)</span>
-                          </>) : (<>
+                          {isExecuting ? (<>
+                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>Executing workflow...</span>
+                            </>) : hasValidationErrors ? (<>
+                              <AlertCircle className="size-4"/>
+                              <span>Cannot Execute</span>
+                            </>) : hasValidationWarnings ? (<>
+                              <AlertTriangle className="size-4"/>
+                              <span>Execute (with warnings)</span>
+                            </>) : (<>
+                              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="15px" height="15px" viewBox="0 0 18 18">
+                                <path fillRule="evenodd" clipRule="evenodd" d="M13.4868 7.0974C13.4955 6.98275 13.5 6.8669 13.5 6.75C13.5 4.26472 11.4853 2.25 9 2.25C6.51472 2.25 4.5 4.26472 4.5 6.75C4.5 6.86689 4.50446 6.98275 4.51321 7.0974C2.89021 7.777 1.75 9.38035 1.75 11.25C1.75 13.7353 3.76472 15.75 6.25 15.75C7.28562 15.75 8.23953 15.4002 9 14.8122C9.76047 15.4002 10.7144 15.75 11.75 15.75C14.2353 15.75 16.25 13.7353 16.25 11.25C16.25 9.38035 15.1098 7.77701 13.4868 7.0974Z" fill="rgba(255, 255, 255, 1)" fillOpacity="0.3" data-color="color-2"></path>
+                                <path d="M10.496 9.757C10.66 10.224 10.75 10.727 10.75 11.25C10.75 13.735 8.735 15.75 6.25 15.75C3.765 15.75 1.75 13.735 1.75 11.25C1.75 10.339 2.021 9.491 2.486 8.783" stroke="rgba(255, 255, 255, 1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"></path>
+                                <path d="M11.511 15.745C12.042 15.773 12.587 15.707 13.123 15.536C15.49 14.778 16.794 12.245 16.036 9.878C15.278 7.511 12.745 6.207 10.378 6.965C9.50999 7.243 8.78599 7.759 8.25299 8.418" stroke="rgba(255, 255, 255, 1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"></path>
+                                <path d="M8.156 11.171C7.695 11.083 7.239 10.92 6.806 10.679C4.636 9.468 3.859 6.727 5.07 4.556C6.281 2.385 9.022 1.609 11.193 2.82C11.904 3.217 12.465 3.778 12.856 4.429" stroke="rgba(255, 255, 255, 1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"></path>
+                              </svg>
+                              <span>Execute workflow</span>
+                            </>)}
+                        </button>
+                        {canRunNowViaTrigger && runNowCandidate && (<button onClick={handleRunNowViaTrigger} disabled={isRunNowButtonDisabled} className={`flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-lg disabled:cursor-not-allowed ${hasValidationErrors
+                ? 'bg-gray-600 cursor-not-allowed disabled:opacity-50'
+                : isCronRunButtonActive
+                    ? 'bg-emerald-600 hover:bg-emerald-600 disabled:opacity-100'
+                    : isCronRunButton
+                        ? 'bg-emerald-700 hover:bg-emerald-600 disabled:opacity-100'
+                        : 'bg-[#F04D26] hover:bg-[#e04420] disabled:opacity-50'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="15px" height="15px" viewBox="0 0 18 18">
-                              <path fillRule="evenodd" clipRule="evenodd" d="M13.4868 7.0974C13.4955 6.98275 13.5 6.8669 13.5 6.75C13.5 4.26472 11.4853 2.25 9 2.25C6.51472 2.25 4.5 4.26472 4.5 6.75C4.5 6.86689 4.50446 6.98275 4.51321 7.0974C2.89021 7.777 1.75 9.38035 1.75 11.25C1.75 13.7353 3.76472 15.75 6.25 15.75C7.28562 15.75 8.23953 15.4002 9 14.8122C9.76047 15.4002 10.7144 15.75 11.75 15.75C14.2353 15.75 16.25 13.7353 16.25 11.25C16.25 9.38035 15.1098 7.77701 13.4868 7.0974Z" fill="rgba(255, 255, 255, 1)" fillOpacity="0.3" data-color="color-2"></path>
+                              <path fillRule="evenodd" clipRule="evenodd" d="M13.4868 7.0974C13.4955 6.98275 13.5 6.8669 13.5 6.75C13.5 4.26472 11.4853 2.25 9 2.25C6.51472 2.25 4.5 4.26472 4.5 6.75C4.5 6.86689 4.50446 6.98275 4.51321 7.0974C2.89021 7.777 1.75 9.38035 1.75 11.25C1.75 13.7353 3.76472 15.75 6.25 15.75C7.28562 15.75 8.23953 15.4002 9 14.8122C9.76047 15.4002 10.7144 15.75 11.75 15.75C14.2353 15.75 16.25 13.7353 16.25 11.25C16.25 9.38035 15.1098 7.77701 13.4868 7.0974Z" fill="rgba(255, 255, 255, 1)" fillOpacity="0.3"></path>
                               <path d="M10.496 9.757C10.66 10.224 10.75 10.727 10.75 11.25C10.75 13.735 8.735 15.75 6.25 15.75C3.765 15.75 1.75 13.735 1.75 11.25C1.75 10.339 2.021 9.491 2.486 8.783" stroke="rgba(255, 255, 255, 1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"></path>
                               <path d="M11.511 15.745C12.042 15.773 12.587 15.707 13.123 15.536C15.49 14.778 16.794 12.245 16.036 9.878C15.278 7.511 12.745 6.207 10.378 6.965C9.50999 7.243 8.78599 7.759 8.25299 8.418" stroke="rgba(255, 255, 255, 1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"></path>
                               <path d="M8.156 11.171C7.695 11.083 7.239 10.92 6.806 10.679C4.636 9.468 3.859 6.727 5.07 4.556C6.281 2.385 9.022 1.609 11.193 2.82C11.904 3.217 12.465 3.778 12.856 4.429" stroke="rgba(255, 255, 255, 1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"></path>
                             </svg>
-                            <span>Execute workflow</span>
-                          </>)}
-                      </button>
+                            <span>{isCronRunButtonActive
+                                ? 'Cron is Running'
+                                : isCronRunButton
+                                    ? 'Cron is Active'
+                                    : 'Run Webhook Now'}</span>
+                          </button>)}
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">
+                      {disableManualExecute && !hasValidationErrors && (<div className="text-xs space-y-1">
+                          <div className="font-semibold text-amber-300">Manual trigger not found</div>
+                          <div className="text-white/90">Use <span className="font-medium">{runNowCandidate?.source === 'cron' ? 'Run Cron Now' : 'Run Webhook Now'}</span> for this workflow.</div>
+                        </div>)}
+                      {isCronRunButton && !hasValidationErrors && (<div className="text-xs space-y-1">
+                          <div className="font-semibold text-emerald-300">Cron is active</div>
+                          <div className="text-white/90">This workflow runs automatically by schedule.</div>
+                        </div>)}
                       {hasValidationErrors && (<div className="text-xs space-y-1">
                           <div className="font-semibold text-red-400">Workflow has errors:</div>
                           {validation.issues.filter(i => i.type === 'error').map((e, i) => (<div key={i} className="text-white/90">• {e.message}</div>))}

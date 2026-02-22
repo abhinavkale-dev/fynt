@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import type { Edge, Node } from '@xyflow/react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { validateGraphShape } from '@/lib/workflow/graphValidation';
@@ -36,6 +36,10 @@ interface WorkflowRecord {
     trigger?: {
         metadata?: unknown;
     } | null;
+}
+interface WorkflowCredentialReference {
+    id: string;
+    platform: string;
 }
 type CreateWorkflowMutation = {
     mutateAsync: (input: CreateWorkflowInput) => Promise<WorkflowRecord>;
@@ -184,6 +188,17 @@ function cloneForSave<T>(value: T): T {
     }
     return JSON.parse(JSON.stringify(value)) as T;
 }
+function extractCredentialId(data: unknown): string | undefined {
+    if (!data || typeof data !== 'object') {
+        return undefined;
+    }
+    const credentialValue = (data as Record<string, unknown>).credentialId;
+    if (typeof credentialValue !== 'string') {
+        return undefined;
+    }
+    const trimmed = credentialValue.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+}
 interface UseWorkflowPersistenceParams {
     id: string;
     workflowData: WorkflowRecord | undefined;
@@ -200,8 +215,10 @@ interface UseWorkflowPersistenceParams {
     onWorkflowCreated: (workflow: WorkflowRecord) => void;
     createWorkflowMutation: CreateWorkflowMutation;
     updateWorkflowMutation: UpdateWorkflowMutation;
+    availableCredentials: WorkflowCredentialReference[];
+    credentialsReady: boolean;
 }
-export function useWorkflowPersistence({ id, workflowData, template, currentWorkflowId, setCurrentWorkflowId, workflowTitle, setWorkflowTitle, setTempTitle, nodes, edges, setNodes, setEdges, onWorkflowCreated, createWorkflowMutation, updateWorkflowMutation, }: UseWorkflowPersistenceParams) {
+export function useWorkflowPersistence({ id, workflowData, template, currentWorkflowId, setCurrentWorkflowId, workflowTitle, setWorkflowTitle, setTempTitle, nodes, edges, setNodes, setEdges, onWorkflowCreated, createWorkflowMutation, updateWorkflowMutation, availableCredentials, credentialsReady, }: UseWorkflowPersistenceParams) {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
     const [lastSaveError, setLastSaveError] = useState<string | null>(null);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -222,6 +239,50 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
     const debouncedEdges = useDebounce(edges, AUTO_SAVE_DEBOUNCE_MS);
     const debouncedTitle = useDebounce(workflowTitle, AUTO_SAVE_DEBOUNCE_MS);
     const debouncedChangeVersion = useDebounce(changeVersion, AUTO_SAVE_DEBOUNCE_MS);
+    const availableCredentialIds = useMemo(() => new Set(availableCredentials.map((credential) => credential.id)), [availableCredentials]);
+    const credentialIdsByPlatform = useMemo(() => {
+        const byPlatform = new Map<string, Set<string>>();
+        for (const credential of availableCredentials) {
+            const platform = credential.platform.toLowerCase();
+            const existing = byPlatform.get(platform);
+            if (existing) {
+                existing.add(credential.id);
+                continue;
+            }
+            byPlatform.set(platform, new Set([credential.id]));
+        }
+        return byPlatform;
+    }, [availableCredentials]);
+    const templateBindingPlatformByNodeId = useMemo(() => {
+        const byNodeId = new Map<string, string>();
+        if (!template) {
+            return byNodeId;
+        }
+        for (const binding of template.requiredBindings) {
+            const platform = binding.platform.toLowerCase();
+            for (const nodeId of binding.nodeIds) {
+                if (!byNodeId.has(nodeId)) {
+                    byNodeId.set(nodeId, platform);
+                }
+            }
+        }
+        return byNodeId;
+    }, [template]);
+    const isTemplateNodeCredentialValid = useCallback((nodeId: string, credentialId: string | undefined): boolean => {
+        if (!credentialId) {
+            return false;
+        }
+        const normalizedCredentialId = credentialId.trim();
+        if (!normalizedCredentialId) {
+            return false;
+        }
+        const requiredPlatform = templateBindingPlatformByNodeId.get(nodeId);
+        if (requiredPlatform) {
+            const platformCredentialIds = credentialIdsByPlatform.get(requiredPlatform);
+            return Boolean(platformCredentialIds?.has(normalizedCredentialId));
+        }
+        return availableCredentialIds.has(normalizedCredentialId);
+    }, [templateBindingPlatformByNodeId, credentialIdsByPlatform, availableCredentialIds]);
     const markWorkflowChanged = useCallback(() => {
         const nextVersion = changeVersionRef.current + 1;
         changeVersionRef.current = nextVersion;
@@ -408,6 +469,7 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
         finalizeSaveState,
     ]);
     useEffect(() => {
+        setCurrentWorkflowId((previousWorkflowId) => previousWorkflowId === id ? previousWorkflowId : id);
         if (id === 'new') {
             setNodes([]);
             setEdges([]);
@@ -429,6 +491,9 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
             setChangeVersion(0);
         }
         else if (workflowData) {
+            if (workflowData.id !== id) {
+                return;
+            }
             if (hasLoadedInitialData && currentWorkflowId === workflowData.id) {
                 return;
             }
@@ -509,9 +574,14 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
         setEdges,
         setWorkflowTitle,
         setTempTitle,
+        setCurrentWorkflowId,
     ]);
     useEffect(() => {
         if (!workflowData || !template || template.requiredBindings.length === 0)
+            return;
+        if (workflowData.id !== id)
+            return;
+        if (!credentialsReady)
             return;
         if (templateSetupDismissed)
             return;
@@ -520,10 +590,8 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
             const node = nodeById.get(nodeId);
             if (!node)
                 return false;
-            const credentialId = node.data && typeof node.data === 'object'
-                ? (node.data as Record<string, unknown>).credentialId
-                : undefined;
-            return !(typeof credentialId === 'string' && credentialId.trim().length > 0);
+            const credentialId = extractCredentialId(node.data);
+            return !isTemplateNodeCredentialValid(nodeId, credentialId);
         }));
         const hasMissingRequiredFields = (template.fieldRequirements ?? []).some((fieldRequirement) => {
             if (!fieldRequirement.required)
@@ -543,7 +611,7 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
         if (hasMissingCredentials || hasMissingRequiredFields) {
             setShowTemplateSetup(true);
         }
-    }, [workflowData, template, nodes, templateSetupDismissed]);
+    }, [workflowData, id, template, nodes, templateSetupDismissed, credentialsReady, isTemplateNodeCredentialValid]);
     useEffect(() => {
         setTemplateSetupDismissed(false);
     }, [workflowData?.id]);
@@ -571,6 +639,7 @@ export function useWorkflowPersistence({ id, workflowData, template, currentWork
         setHasUserMadeChanges(false);
         setGraphRecoveryNotice(null);
         setGraphIntegrityError(null);
+        setTemplateSetupDismissed(false);
         lastPersistedSnapshotKeyRef.current = null;
         changeVersionRef.current = 0;
         setChangeVersion(0);

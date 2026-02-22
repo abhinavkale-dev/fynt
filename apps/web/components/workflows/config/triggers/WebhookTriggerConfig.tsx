@@ -10,12 +10,42 @@ interface WebhookTriggerConfigProps {
     onSave: (data: Record<string, any>) => void;
 }
 const WEBHOOK_SECRET_PLACEHOLDER = 'change-this-secret';
+function isPlaceholderSecret(value: string): boolean {
+    const normalized = value.trim().toLowerCase();
+    return normalized === WEBHOOK_SECRET_PLACEHOLDER
+        || normalized === 'your_secret'
+        || normalized === 'your-secret'
+        || normalized === 'your secret';
+}
+function isLocalHostname(hostname: string): boolean {
+    const normalized = hostname.trim().toLowerCase();
+    return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1' || normalized === '[::1]';
+}
+function hasPublicWebhookBaseUrl(publicAppUrl: string | undefined): boolean {
+    if (publicAppUrl && /^https?:\/\//.test(publicAppUrl)) {
+        let parsedUrl: URL | null = null;
+        try {
+            parsedUrl = new URL(publicAppUrl);
+        }
+        catch {
+            parsedUrl = null;
+        }
+        if (parsedUrl && !isLocalHostname(parsedUrl.hostname)) {
+            return true;
+        }
+    }
+    if (typeof window !== 'undefined') {
+        return !isLocalHostname(window.location.hostname);
+    }
+    return false;
+}
 export function WebhookTriggerConfig({ nodeId, data, onSave }: WebhookTriggerConfigProps) {
     const [label, setLabel] = useState(data.label || 'Webhook Trigger');
-    const [secret, setSecret] = useState(typeof data.secret === 'string' && data.secret.trim().toLowerCase() === WEBHOOK_SECRET_PLACEHOLDER
-        ? ''
-        : (data.secret || ''));
+    const initialSecret = typeof data.secret === 'string' ? data.secret.trim() : '';
+    const [secret, setSecret] = useState(isPlaceholderSecret(initialSecret) ? '' : initialSecret);
     const [routeKey, setRouteKey] = useState(data.routeKey || 'priority');
+    const isLabelMissing = !label.trim();
+    const isSecretMissing = !secret.trim() || isPlaceholderSecret(secret);
     const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
     const webhookUrl = useMemo(() => {
         if (typeof window === 'undefined') {
@@ -30,26 +60,39 @@ export function WebhookTriggerConfig({ nodeId, data, onSave }: WebhookTriggerCon
     }, [nodeId, publicAppUrl, secret]);
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const hasPublicUrl = hasPublicWebhookBaseUrl(publicAppUrl);
         onSave({
             label,
-            secret,
+            secret: secret.trim(),
             routeKey,
+            isConfigured: !isLabelMissing && !isSecretMissing && hasPublicUrl,
         });
     };
     const missingFields: string[] = [];
-    if (!label.trim())
+    if (isLabelMissing)
         missingFields.push('Label');
-    if (!secret.trim())
+    if (isSecretMissing)
         missingFields.push('Secret');
     return (<form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label className="text-white/80">Trigger Label</Label>
-        <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Webhook Trigger" className="bg-[#2D2D2E] border-[#444] text-white placeholder:text-white/30"/>
+        <Label className="text-white/80">
+          Trigger Label <span className="text-red-400">*</span>
+          {isLabelMissing && (<span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-bold leading-none text-red-400" title="Required field missing">
+              !
+            </span>)}
+        </Label>
+        <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Webhook Trigger" aria-invalid={isLabelMissing} className={`bg-[#2D2D2E] text-white placeholder:text-white/30 ${isLabelMissing ? "border-red-500/70 focus-visible:ring-red-500/40" : "border-[#444]"}`}/>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-white/80">Webhook Secret</Label>
-        <Input value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Set a shared secret" className="bg-[#2D2D2E] border-[#444] text-white placeholder:text-white/30"/>
+        <Label className="text-white/80">
+          Webhook Secret <span className="text-red-400">*</span>
+          {isSecretMissing && (<span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-bold leading-none text-red-400" title="Required field missing">
+              !
+            </span>)}
+        </Label>
+        <Input value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Set a shared secret" aria-invalid={isSecretMissing} className={`bg-[#2D2D2E] text-white placeholder:text-white/30 ${isSecretMissing ? "border-red-500/70 focus-visible:ring-red-500/40" : "border-[#444]"}`}/>
+        {isSecretMissing && <p className="text-xs text-red-400">Secret is required.</p>}
         <p className="text-xs text-white/40">Requests must send this as query `secret` or header `x-fynt-secret`.</p>
       </div>
 
@@ -71,7 +114,7 @@ export function WebhookTriggerConfig({ nodeId, data, onSave }: WebhookTriggerCon
 
       <ValidationMessage missingFields={missingFields}/>
 
-      <Button type="submit" disabled={!label.trim() || !secret.trim()} className="w-full bg-[#F04D26] hover:bg-[#e04420] text-white disabled:bg-[#F04D26]/50 disabled:text-white/70">
+      <Button type="submit" disabled={isLabelMissing || isSecretMissing} className="w-full bg-[#F04D26] hover:bg-[#e04420] text-white disabled:bg-[#F04D26]/50 disabled:text-white/70">
         Save
       </Button>
     </form>);

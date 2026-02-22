@@ -5,6 +5,8 @@ import type { ExecutionMode } from "../../engine/executor.js";
 type SupportedAINodeType = "aiNode" | "openaiNode" | "anthropicNode" | "geminiNode";
 type AIProvider = "openai" | "anthropic" | "gemini";
 type AIInputMode = "prompt" | "json";
+const MAX_PROMPT_CHARS = 200_000;
+const PROMPT_TRUNCATION_SUFFIX = "\n\n[Prompt truncated by Fynt to stay within model context limits]";
 const AI_PROVIDER_BY_NODE_TYPE: Record<SupportedAINodeType, AIProvider> = {
     aiNode: "openai",
     openaiNode: "openai",
@@ -203,6 +205,26 @@ function normalizeUsage(usage: unknown): NodeExecutionOutput | undefined {
     if (usage === undefined || usage === null)
         return undefined;
     return usage as NodeExecutionOutput;
+}
+function truncatePrompt(prompt: string): {
+    prompt: string;
+    truncated: boolean;
+    originalLength: number;
+} {
+    const originalLength = prompt.length;
+    if (originalLength <= MAX_PROMPT_CHARS) {
+        return {
+            prompt,
+            truncated: false,
+            originalLength,
+        };
+    }
+    const available = Math.max(0, MAX_PROMPT_CHARS - PROMPT_TRUNCATION_SUFFIX.length);
+    return {
+        prompt: prompt.slice(0, available) + PROMPT_TRUNCATION_SUFFIX,
+        truncated: true,
+        originalLength,
+    };
 }
 async function executeOpenAIRequest(params: {
     apiKey: string;
@@ -636,19 +658,43 @@ export async function executeAINode(nodeType: string, data: AINodeData, _nodeRun
             reason: 'Prompt is empty after parsing',
         };
     }
+    const truncatedPrompt = truncatePrompt(parsedPrompt);
     const requestParams = {
         apiKey: resolvedApiKey,
         model: resolvedModel,
-        prompt: parsedPrompt,
+        prompt: truncatedPrompt.prompt,
         ...(parsedSystemPrompt ? { systemPrompt: parsedSystemPrompt } : {}),
         ...(temperature !== undefined ? { temperature } : {}),
         ...(maxTokens !== undefined ? { maxTokens } : {}),
     };
+    let response: NodeExecutionOutput;
     if (provider === "openai") {
-        return executeOpenAIRequest(requestParams);
+        response = await executeOpenAIRequest(requestParams);
     }
-    if (provider === "anthropic") {
-        return executeAnthropicRequest(requestParams);
+    else if (provider === "anthropic") {
+        response = await executeAnthropicRequest(requestParams);
     }
-    return executeGeminiRequest(requestParams);
+    else {
+        response = await executeGeminiRequest(requestParams);
+    }
+    if (!truncatedPrompt.truncated) {
+        return response;
+    }
+    if (response && typeof response === "object" && !Array.isArray(response)) {
+        return {
+            ...response,
+            _inputTruncated: true,
+            _inputOriginalLength: truncatedPrompt.originalLength,
+            _inputTruncatedLength: truncatedPrompt.prompt.length,
+            _inputTruncationReason: "prompt_char_limit_exceeded",
+        };
+    }
+    return {
+        success: true,
+        data: response,
+        _inputTruncated: true,
+        _inputOriginalLength: truncatedPrompt.originalLength,
+        _inputTruncatedLength: truncatedPrompt.prompt.length,
+        _inputTruncationReason: "prompt_char_limit_exceeded",
+    };
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentProps } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 const RUN_STATUS_COLORS: Record<string, string> = {
@@ -84,8 +84,10 @@ interface RunPanelProps {
     hasNextPage: boolean | undefined;
     fetchNextPage: () => void;
     isFetchingNextPage: boolean;
+    isNodeFallbackPolling?: boolean;
+    executionsHref?: ComponentProps<typeof Link>['href'];
 }
-export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetail, runDetailLoading, liveStatuses, workflowStatus, workflowFinishedAt, selectedNodeId, onSelectNode, onClose, hasNextPage, fetchNextPage, isFetchingNextPage, }: RunPanelProps) {
+export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetail, runDetailLoading, liveStatuses, workflowStatus, workflowFinishedAt, selectedNodeId, onSelectNode, onClose, hasNextPage, fetchNextPage, isFetchingNextPage, isNodeFallbackPolling = false, executionsHref = { pathname: '/home/executions' }, }: RunPanelProps) {
     const [nowMs, setNowMs] = useState(() => Date.now());
     const effectiveStatus = workflowStatus || runDetail?.status || 'Pending';
     const isWorkflowTerminal = effectiveStatus === 'Success' || effectiveStatus === 'Failure';
@@ -112,11 +114,18 @@ export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetai
             return next;
         });
     };
-    return (<div className="w-80 h-full border-l border-[#333] bg-[#101010] flex flex-col overflow-hidden shrink-0">
+    return (<div className="w-80 h-full min-h-0 border-l border-[#333] bg-[#101010] flex flex-col overflow-hidden shrink-0" onWheelCapture={(event) => {
+            event.stopPropagation();
+        }}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#333] shrink-0 bg-[#101010]">
-        <h3 className="text-sm font-medium text-white">Runs</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-white">Runs</h3>
+          {isNodeFallbackPolling && (<span className="inline-flex items-center rounded border border-white/20 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-white/60">
+              Polling
+            </span>)}
+        </div>
         <div className="flex items-center gap-1">
-          <Link href="/home/executions" className="inline-flex items-center justify-center w-7 h-7 rounded text-white/40 hover:text-white hover:bg-white/5 transition-colors duration-150" title="Open executions page" aria-label="Open executions page">
+          <Link href={executionsHref} className="inline-flex items-center justify-center w-7 h-7 rounded text-white/40 hover:text-white hover:bg-white/5 transition-colors duration-150" title="Open executions page" aria-label="Open executions page">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 17L17 7"/>
               <path d="M7 7h10v10"/>
@@ -131,7 +140,7 @@ export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetai
         </div>
       </div>
 
-      <div className="overflow-y-scroll border-b border-[#333] bg-[#101010]" style={{ maxHeight: '40%', scrollbarGutter: 'stable' }}>
+      <div className="shrink-0 max-h-[40%] overflow-y-auto border-b border-[#333] bg-[#101010]" style={{ scrollbarGutter: 'stable' }}>
         {isLoading ? (<div className="p-3 space-y-2">
             {[1, 2, 3].map((i) => (<div key={i} className="h-10 bg-white/5 rounded animate-pulse"/>))}
           </div>) : runs.length === 0 ? (<div className="p-4 text-xs text-white/40 text-center">
@@ -160,13 +169,9 @@ export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetai
           </div>)}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-scroll p-3 bg-[#101010]" style={{ scrollbarGutter: 'stable' }}>
-        {!selectedRunId ? (<div className="text-xs text-white/40 text-center py-4">
-            Select a run to see details.
-          </div>) : runDetailLoading || !runDetail ? (<div className="space-y-2">
-            {[1, 2].map((i) => (<div key={i} className="h-16 bg-white/5 rounded-lg animate-pulse"/>))}
-          </div>) : (<>
-            <div className="flex items-center justify-between mb-3">
+      <div className="flex-1 min-h-0 overflow-hidden p-3 bg-[#101010]">
+        <div className="flex h-full min-h-0 flex-col">
+          {selectedRunId && runDetail && !runDetailLoading && (<div className="flex items-center justify-between mb-3 shrink-0">
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${RUN_STATUS_COLORS[effectiveStatus] || ''}`}>
                   {effectiveStatus}
@@ -174,6 +179,9 @@ export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetai
                 <span className="text-white/40 text-xs">
                   {formatRunDuration(runDetail.createdAt, effectiveFinishedAt, nowMs)}
                 </span>
+                {isNodeFallbackPolling && (<span className="inline-flex items-center rounded border border-white/20 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-white/60">
+                    Polling
+                  </span>)}
               </div>
               <button onClick={() => onSelectRun(null)} className="text-white/40 hover:text-white transition-colors p-1 rounded hover:bg-white/5" title="Close details">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -181,58 +189,62 @@ export function RunPanel({ runs, isLoading, selectedRunId, onSelectRun, runDetai
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-            </div>
+            </div>)}
 
-            <div className="space-y-2">
-              {runDetail.nodeRuns.length === 0 ? (<p className="text-white/40 text-xs">No nodes executed yet.</p>) : (<AnimatePresence initial={false}>
-                  {runDetail.nodeRuns.map((nr, index) => {
-                    const isPersistedTerminal = nr.status === 'Success' || nr.status === 'Failed' || nr.status === 'Skipped';
-                    const liveStatus = (isWorkflowTerminal || isPersistedTerminal)
-                        ? nr.status
-                        : (liveStatuses[nr.nodeId] || nr.status);
-                    return (<motion.div key={nr.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: index * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }} onClick={() => onSelectNode(nr.nodeId)} className={`rounded-lg border bg-[#101010] p-2.5 cursor-pointer transition-colors ${selectedNodeId === nr.nodeId
-                            ? 'border-white/20 bg-[#131313]'
-                            : 'border-[#333] hover:border-[#555]'}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-white/70 font-medium">{nr.nodeType}</span>
-                          <span className={`text-[10px] font-medium transition-colors duration-200 ${NODE_STATUS_COLORS[liveStatus] || 'text-white/50'}`}>
-                            {liveStatus}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-white/40 space-y-0.5">
-                          {nr.startedAt && (<div>{formatRunDuration(nr.startedAt, nr.completedAt, nowMs)}</div>)}
-                          {nr.error && (() => {
-                            const [message, hint] = nr.error.split('\nHint: ');
-                            return (<div className="text-red-400 mt-1 p-1.5 bg-red-500/10 rounded border border-red-500/20">
-                                <div className="font-medium mb-0.5">Error:</div>
-                                <div className="font-mono text-[9px] break-words">{message}</div>
-                                {hint && (<div className="mt-1.5 text-[9px] text-amber-400/90 flex items-start gap-1">
-                                    <span className="shrink-0">Hint:</span>
-                                    <span>{hint}</span>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1" style={{ scrollbarGutter: 'stable' }}>
+            {!selectedRunId ? (<div className="text-xs text-white/40 text-center py-4">Select a run to see details.</div>) : runDetailLoading || !runDetail ? (<div className="space-y-2">
+                {[1, 2].map((i) => (<div key={i} className="h-16 bg-white/5 rounded-lg animate-pulse"/>))}
+              </div>) : (<div className="space-y-2 pb-1">
+                {runDetail.nodeRuns.length === 0 ? (<p className="text-white/40 text-xs">No nodes executed yet.</p>) : (<AnimatePresence initial={false}>
+                    {runDetail.nodeRuns.map((nr, index) => {
+                        const isPersistedTerminal = nr.status === 'Success' || nr.status === 'Failed' || nr.status === 'Skipped';
+                        const liveStatus = (isWorkflowTerminal || isPersistedTerminal)
+                            ? nr.status
+                            : (liveStatuses[nr.nodeId] || nr.status);
+                        return (<motion.div key={nr.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: index * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }} onClick={() => onSelectNode(nr.nodeId)} className={`rounded-lg border bg-[#101010] p-2.5 cursor-pointer transition-colors ${selectedNodeId === nr.nodeId
+                                ? 'border-white/20 bg-[#131313]'
+                                : 'border-[#333] hover:border-[#555]'}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-white/70 font-medium">{nr.nodeType}</span>
+                            <span className={`text-[10px] font-medium transition-colors duration-200 ${NODE_STATUS_COLORS[liveStatus] || 'text-white/50'}`}>
+                              {liveStatus}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-white/40 space-y-0.5">
+                            {nr.startedAt && (<div>{formatRunDuration(nr.startedAt, nr.completedAt, nowMs)}</div>)}
+                            {nr.error && (() => {
+                                const [message, hint] = nr.error.split('\nHint: ');
+                                return (<div className="text-red-400 mt-1 p-1.5 bg-red-500/10 rounded border border-red-500/20">
+                                  <div className="font-medium mb-0.5">Error:</div>
+                                  <div className="font-mono text-[9px] break-words">{message}</div>
+                                  {hint && (<div className="mt-1.5 text-[9px] text-amber-400/90 flex items-start gap-1">
+                                      <span className="shrink-0">Hint:</span>
+                                      <span>{hint}</span>
+                                    </div>)}
+                                </div>);
+                            })()}
+                            {nr.output != null && liveStatus === 'Success' && (<div className="mt-1.5">
+                                <button onClick={() => toggleOutput(nr.id)} className="flex items-center gap-1 font-medium text-white/60 hover:text-white/80 transition-colors cursor-pointer mb-0.5">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-150 ${expandedOutputs.has(nr.id) ? 'rotate-90' : ''}`}>
+                                    <polyline points="9 18 15 12 9 6"/>
+                                  </svg>
+                                  Output
+                                </button>
+                                {expandedOutputs.has(nr.id) && (<div className="bg-[#0d0d0d] rounded p-1.5 border border-[#2a2a2a] max-h-64 overflow-y-auto">
+                                    <pre className="text-[9px] font-mono text-white/70 whitespace-pre-wrap break-words">
+                                      {typeof nr.output === 'string'
+                                        ? nr.output
+                                        : JSON.stringify(nr.output, null, 2)}
+                                    </pre>
                                   </div>)}
-                              </div>);
-                        })()}
-                          {nr.output != null && liveStatus === 'Success' && (<div className="mt-1.5">
-                              <button onClick={() => toggleOutput(nr.id)} className="flex items-center gap-1 font-medium text-white/60 hover:text-white/80 transition-colors cursor-pointer mb-0.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-150 ${expandedOutputs.has(nr.id) ? 'rotate-90' : ''}`}>
-                                  <polyline points="9 18 15 12 9 6"/>
-                                </svg>
-                                Output
-                              </button>
-                              {expandedOutputs.has(nr.id) && (<div className="bg-[#0d0d0d] rounded p-1.5 border border-[#2a2a2a] max-h-64 overflow-y-auto">
-                                  <pre className="text-[9px] font-mono text-white/70 whitespace-pre-wrap break-words">
-                                    {typeof nr.output === 'string'
-                                    ? nr.output
-                                    : JSON.stringify(nr.output, null, 2)}
-                                  </pre>
-                                </div>)}
-                            </div>)}
-                        </div>
-                      </motion.div>);
-                })}
-                </AnimatePresence>)}
-            </div>
-          </>)}
+                              </div>)}
+                          </div>
+                        </motion.div>);
+                    })}
+                  </AnimatePresence>)}
+              </div>)}
+          </div>
+        </div>
       </div>
     </div>);
 }

@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc/client";
 import { useExecutionSocket } from "@/lib/executions/useExecutionSocket";
 import { EASE_OUT_QUAD } from "@/lib/animation/variants";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSearchParams } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 const TIMING = {
@@ -390,12 +391,31 @@ function ExecutionDetailSheet({ runId, open, onOpenChange, nowMs, }: {
     </Sheet>);
 }
 export default function ExecutionsPage() {
+    const searchParams = useSearchParams();
     const isMobile = useIsMobile();
     const shouldReduceMotion = useReducedMotion();
     const [nowMs, setNowMs] = useState(() => Date.now());
     const [statusFilter, setStatusFilter] = useState<StatusFilter>(undefined);
     const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
     const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+    const preselectedWorkflowIdRef = useRef<string | null>(null);
+    const preselectedRunIdRef = useRef<string | null>(null);
+    const requestedWorkflowId = useMemo(() => {
+        const value = searchParams.get('workflowId');
+        if (typeof value !== 'string') {
+            return null;
+        }
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : null;
+    }, [searchParams]);
+    const requestedRunId = useMemo(() => {
+        const value = searchParams.get('runId');
+        if (typeof value !== 'string') {
+            return null;
+        }
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : null;
+    }, [searchParams]);
     const { data: workflowsData, isLoading: workflowsLoading } = trpc.workflow.getAllSummaries.useQuery(undefined, {
         staleTime: 60000,
         refetchOnWindowFocus: false,
@@ -406,13 +426,23 @@ export default function ExecutionsPage() {
         refetchOnWindowFocus: false,
     });
     useEffect(() => {
-        if (workflows.length > 0 && selectedWorkflowId === null) {
+        if (workflows.length === 0) {
+            return;
+        }
+        if (requestedWorkflowId && preselectedWorkflowIdRef.current !== requestedWorkflowId) {
+            preselectedWorkflowIdRef.current = requestedWorkflowId;
+            if (workflows.some((workflow) => workflow.id === requestedWorkflowId)) {
+                setSelectedWorkflowId(requestedWorkflowId);
+                return;
+            }
+        }
+        if (selectedWorkflowId === null) {
             const firstWorkflow = workflows[0];
             if (firstWorkflow) {
                 setSelectedWorkflowId(firstWorkflow.id);
             }
         }
-    }, [workflows, selectedWorkflowId]);
+    }, [workflows, selectedWorkflowId, requestedWorkflowId]);
     useEffect(() => {
         if (selectedWorkflowId && workflows.length > 0 && !workflows.find(w => w.id === selectedWorkflowId)) {
             const firstWorkflow = workflows[0];
@@ -426,6 +456,23 @@ export default function ExecutionsPage() {
         enabled: selectedWorkflowId !== null,
     });
     const runs = data?.pages.flatMap((page) => page.runs) ?? [];
+    useEffect(() => {
+        if (!requestedRunId || preselectedRunIdRef.current === requestedRunId) {
+            return;
+        }
+        if (requestedWorkflowId && selectedWorkflowId !== requestedWorkflowId) {
+            return;
+        }
+        const matchedRun = runs.find((run) => run.id === requestedRunId);
+        if (matchedRun) {
+            setSelectedRunId(requestedRunId);
+            preselectedRunIdRef.current = requestedRunId;
+            return;
+        }
+        if (!isLoading && !hasNextPage) {
+            preselectedRunIdRef.current = requestedRunId;
+        }
+    }, [requestedRunId, requestedWorkflowId, selectedWorkflowId, runs, isLoading, hasNextPage]);
     const hasPendingRuns = runs.some((run) => run.status === "Pending");
     useEffect(() => {
         const timer = window.setInterval(() => {

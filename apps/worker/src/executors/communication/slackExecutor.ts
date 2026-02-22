@@ -1,9 +1,26 @@
 import { parseTemplateWithMetadata } from "@repo/shared/parser";
 import { SsrfBlockedError, validateOutboundUrl } from "@repo/shared/ssrf";
 import type { SlackNodeData, NodeExecutionOutput } from "../../engine/types/index.js";
-import { resolveCredential } from "../../engine/credentialResolver.js";
+import { resolveCredential, resolveSingleCredentialByPlatform } from "../../engine/credentialResolver.js";
 import type { ExecutionMode } from "../../engine/executor.js";
 import { formatMessageForDelivery } from "./messageFormatting.js";
+function normalizeSlackWebhookUrl(url: string | undefined): string | undefined {
+    if (!url) {
+        return undefined;
+    }
+    let normalized = String(url).trim();
+    if (!normalized) {
+        return undefined;
+    }
+    if (normalized.startsWith("<") && normalized.endsWith(">")) {
+        normalized = normalized.slice(1, -1).trim();
+    }
+    if ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+        (normalized.startsWith("'") && normalized.endsWith("'"))) {
+        normalized = normalized.slice(1, -1).trim();
+    }
+    return normalized || undefined;
+}
 function isSlackWebhookUrl(url: string): boolean {
     try {
         const parsed = new URL(url);
@@ -13,6 +30,13 @@ function isSlackWebhookUrl(url: string): boolean {
     catch {
         return false;
     }
+}
+function isRecoverableCredentialResolutionError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+        return false;
+    }
+    return (error.message.includes('not found or access denied') ||
+        error.message.includes('is not a Slack credential'));
 }
 export async function executeSlackNode(data: SlackNodeData, _nodeRunId: string, runMetadata: Record<string, NodeExecutionOutput>, executionMode: ExecutionMode = 'legacy', ownerUserId: string): Promise<NodeExecutionOutput> {
     const { webhookUrl, message, channel, credentialId } = data;
@@ -66,14 +90,35 @@ export async function executeSlackNode(data: SlackNodeData, _nodeRunId: string, 
         };
     }
     let resolvedWebhookUrl: string | undefined;
-    if (credentialId) {
-        const { keys } = await resolveCredential(credentialId, ownerUserId);
-        resolvedWebhookUrl = keys.webhookUrl;
+    let credentialResolutionError: Error | undefined;
+    if (typeof credentialId === 'string' && credentialId.trim().length > 0) {
+        const normalizedCredentialId = credentialId.trim();
+        try {
+            const { platform, keys } = await resolveCredential(normalizedCredentialId, ownerUserId);
+            if (platform.toLowerCase() !== 'slack') {
+                throw new Error(`Credential ${normalizedCredentialId} is not a Slack credential`);
+            }
+            resolvedWebhookUrl = normalizeSlackWebhookUrl(keys.webhookUrl);
+        }
+        catch (error) {
+            if (!isRecoverableCredentialResolutionError(error)) {
+                throw error;
+            }
+            credentialResolutionError = error instanceof Error ? error : new Error('Failed to resolve Slack credential');
+            // Recover stale template credential IDs when there is only one Slack credential for the user.
+            const fallbackCredential = await resolveSingleCredentialByPlatform('slack', ownerUserId);
+            if (fallbackCredential) {
+                resolvedWebhookUrl = normalizeSlackWebhookUrl(fallbackCredential.keys.webhookUrl);
+            }
+        }
     }
     if (!resolvedWebhookUrl) {
-        resolvedWebhookUrl = webhookUrl || process.env.SLACK_WEBHOOK_URL;
+        resolvedWebhookUrl = normalizeSlackWebhookUrl(webhookUrl || process.env.SLACK_WEBHOOK_URL);
     }
     if (!resolvedWebhookUrl) {
+        if (credentialResolutionError) {
+            throw new Error(`${credentialResolutionError.message}. This workflow likely has a stale Slack credential. Re-select the Slack credential on the node.`);
+        }
         throw new Error('Slack webhook URL not configured');
     }
     if (!isSlackWebhookUrl(resolvedWebhookUrl)) {

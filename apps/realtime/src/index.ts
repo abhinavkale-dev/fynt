@@ -16,24 +16,31 @@ const workspaceRootDir = resolve(realtimeRootDir, "../..");
 for (const envPath of [
   resolve(realtimeRootDir, ".env"),
   resolve(realtimeRootDir, ".env.local"),
+  resolve(realtimeRootDir, "../web/.env"),
   resolve(realtimeRootDir, "../web/.env.local"),
   resolve(workspaceRootDir, ".env"),
+  resolve(workspaceRootDir, ".env.local"),
 ]) {
   loadEnv({ path: envPath, quiet: true });
 }
 
-const host = process.env.REALTIME_HOST?.trim() || "0.0.0.0";
+const host = process.env.REALTIME_HOST?.trim() || "::";
 const port = Number.parseInt(
   process.env.REALTIME_PORT || process.env.PORT || "3101",
   10
 );
-const signingSecret =
-  process.env.EXECUTION_STREAM_SIGNING_SECRET?.trim() ||
-  process.env.BETTER_AUTH_SECRET?.trim();
+const signingSecrets = Array.from(
+  new Set(
+    [
+      process.env.BETTER_AUTH_SECRET?.trim(),
+      process.env.EXECUTION_STREAM_SIGNING_SECRET?.trim(),
+    ].filter((value): value is string => Boolean(value && value.length > 0))
+  )
+);
 
-if (!signingSecret) {
+if (signingSecrets.length === 0) {
   throw new Error(
-    "Missing execution stream signing secret. Set EXECUTION_STREAM_SIGNING_SECRET or BETTER_AUTH_SECRET."
+    "Missing execution stream signing secret. Set BETTER_AUTH_SECRET or EXECUTION_STREAM_SIGNING_SECRET."
   );
 }
 
@@ -48,6 +55,18 @@ interface RuntimeWebSocket {
   terminate(): void;
   ping(data?: Buffer | string): void;
   on(event: string, listener: (...args: unknown[]) => void): void;
+}
+
+function verifyExecutionTokenWithAnySecret(token: string): ExecutionStreamTokenPayload {
+  let lastError: unknown;
+  for (const secret of signingSecrets) {
+    try {
+      return verifyExecutionStreamToken(token, secret);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw (lastError instanceof Error ? lastError : new Error("Invalid token."));
 }
 
 function sendJson(ws: RuntimeWebSocket, payload: Record<string, unknown>): void {
@@ -93,29 +112,34 @@ server.on("upgrade", (req, socket, head) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
     if (url.pathname !== "/ws/executions") {
+      console.warn("[realtime] Rejected websocket upgrade: unknown route", url.pathname);
       closeHttpUpgrade(socket, 404, "Unknown websocket route.");
       return;
     }
 
     const token = url.searchParams.get("token");
     if (!token) {
+      console.warn("[realtime] Rejected websocket upgrade: missing token.");
       closeHttpUpgrade(socket, 401, "Missing token.");
       return;
     }
 
     let payload: ExecutionStreamTokenPayload;
     try {
-      payload = verifyExecutionStreamToken(token, signingSecret);
+      payload = verifyExecutionTokenWithAnySecret(token);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "Invalid token.";
+      console.warn("[realtime] Rejected websocket upgrade: invalid token.", reason);
       closeHttpUpgrade(socket, 401, reason);
       return;
     }
 
     wss.handleUpgrade(req, socket, head, (ws: RuntimeWebSocket) => {
+      console.log("[realtime] Accepted websocket connection for run", payload.runId);
       wss.emit("connection", ws, payload);
     });
   } catch {
+    console.warn("[realtime] Rejected websocket upgrade: malformed request.");
     closeHttpUpgrade(socket, 400, "Malformed websocket upgrade request.");
   }
 });
@@ -212,6 +236,6 @@ wss.on("connection", (ws: RuntimeWebSocket, payload: ExecutionStreamTokenPayload
   ws.on("error", cleanup);
 });
 
-server.listen(port, host, () => {
+server.listen({ port, host, ipv6Only: false }, () => {
   console.log(`[realtime] Listening on ws://${host}:${port}/ws/executions`);
 });

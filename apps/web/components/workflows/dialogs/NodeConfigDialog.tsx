@@ -29,7 +29,8 @@ export function NodeConfigDialog({ open, onOpenChange, nodeId, nodeType, nodeDat
             return;
         try {
             setIsSaving(true);
-            await Promise.resolve(onSave(nodeId, { ...data, isConfigured: true }));
+            const nextIsConfigured = typeof data.isConfigured === "boolean" ? data.isConfigured : true;
+            await Promise.resolve(onSave(nodeId, { ...data, isConfigured: nextIsConfigured }));
             onOpenChange(false);
         }
         finally {

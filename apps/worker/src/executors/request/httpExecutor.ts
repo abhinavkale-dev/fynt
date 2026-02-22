@@ -2,6 +2,41 @@ import type { HTTPNodeData, NodeExecutionOutput } from "../../engine/types/index
 import { parseTemplate } from "@repo/shared/parser";
 import { SsrfBlockedError, validateOutboundUrl } from "@repo/shared/ssrf";
 import type { ExecutionMode } from "../../engine/executor.js";
+const MAX_TEXT_RESPONSE_CHARS = 100_000;
+const TEXT_TRUNCATION_SUFFIX = "\n...[response truncated by Fynt]";
+function isLikelyTextResponse(contentType: string | null): boolean {
+    if (!contentType) {
+        return true;
+    }
+    const normalized = contentType.toLowerCase().split(";")[0]?.trim() ?? "";
+    if (normalized.startsWith("text/")) {
+        return true;
+    }
+    return normalized === "application/xml" ||
+        normalized === "application/xhtml+xml" ||
+        normalized === "application/javascript";
+}
+function truncateText(value: string, maxChars: number, suffix: string): {
+    text: string;
+    truncated: boolean;
+    originalLength: number;
+} {
+    const originalLength = value.length;
+    if (originalLength <= maxChars) {
+        return {
+            text: value,
+            truncated: false,
+            originalLength,
+        };
+    }
+    const suffixLength = suffix.length;
+    const available = Math.max(0, maxChars - suffixLength);
+    return {
+        text: value.slice(0, available) + suffix,
+        truncated: true,
+        originalLength,
+    };
+}
 function getHttpErrorHint(status: number, method: string): string {
     switch (status) {
         case 400: return 'Check the request body format and required fields';
@@ -117,10 +152,26 @@ export async function executeHTTPNode(data: HTTPNodeData & {
         }
         else {
             const text = await response.text();
+            const shouldTruncate = isLikelyTextResponse(contentType);
+            const truncatedText = shouldTruncate
+                ? truncateText(text, MAX_TEXT_RESPONSE_CHARS, TEXT_TRUNCATION_SUFFIX)
+                : {
+                    text,
+                    truncated: false,
+                    originalLength: text.length,
+                };
             return {
                 ...responseMeta,
-                body: text,
-                data: text,
+                body: truncatedText.text,
+                data: truncatedText.text,
+                ...(truncatedText.truncated
+                    ? {
+                        _truncated: true,
+                        _originalLength: truncatedText.originalLength,
+                        _truncatedLength: truncatedText.text.length,
+                        _truncationReason: "text_response_char_limit_exceeded",
+                    }
+                    : {}),
             };
         }
     }
