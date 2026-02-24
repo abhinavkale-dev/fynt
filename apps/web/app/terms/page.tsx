@@ -198,8 +198,8 @@ export default function TermsOfService() {
             </h2>
             <p>
               If you have any questions about these Terms, please contact us at{" "}
-              <a href="mailto:legal@fynt.com" className="text-[#F04D26] hover:underline">
-                legal@fynt.com
+              <a href="mailto:legal@fynt.in" className="text-[#F04D26] hover:underline">
+                legal@fynt.in
               </a>
               .
             </p>

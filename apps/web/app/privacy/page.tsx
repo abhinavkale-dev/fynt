@@ -186,8 +186,8 @@ export default function PrivacyPolicy() {
             <p>
               If you have any questions about this Privacy Policy, please
               contact us at{" "}
-              <a href="mailto:privacy@fynt.com" className="text-[#F04D26] hover:underline">
-                privacy@fynt.com
+              <a href="mailto:privacy@fynt.in" className="text-[#F04D26] hover:underline">
+                privacy@fynt.in
               </a>
               .
             </p>

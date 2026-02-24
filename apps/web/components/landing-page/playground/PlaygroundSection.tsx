@@ -334,7 +334,7 @@ export function PlaygroundSection() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 15 14" className="size-3.5 text-gray-400">
                 <path fill="currentColor" fillRule="evenodd" d="M7.5 1.313a2.917 2.917 0 0 0-2.917 2.916V5.25h-.146c-.885 0-1.604.718-1.604 1.604v4.375c0 .886.719 1.604 1.604 1.604h6.125c.886 0 1.605-.718 1.605-1.604V6.854c0-.886-.719-1.604-1.604-1.604h-.146V4.23A2.917 2.917 0 0 0 7.5 1.311ZM9.542 5.25V4.23a2.042 2.042 0 1 0-4.084 0v1.02z" clipRule="evenodd"/>
               </svg>
-              fynt.com
+              fynt.in
             </div>
 
             <div className="flex flex-1 justify-end gap-4">
