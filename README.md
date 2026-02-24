@@ -2,6 +2,13 @@
 
 **Open-source workflow automation platform. Build, run, and monitor multi-step automations with a visual node editor.**
 
+## Demo Video
+
+[![Watch Fynt demo video on X](https://pbs.twimg.com/amplify_video_thumb/2025449060078088192/img/Rrch_FZEhH-QcEvY.jpg)](https://x.com/Abhinavstwt/status/2025449306564821163?s=20)
+
+Watch the product demo on X:
+[https://x.com/Abhinavstwt/status/2025449306564821163?s=20](https://x.com/Abhinavstwt/status/2025449306564821163?s=20)
+
 
 ## What is Fynt?
 
