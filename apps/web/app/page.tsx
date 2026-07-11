@@ -39,7 +39,7 @@ export default async function Home() {
         <Hero stars={stars} />
 
         
-        <div className="w-[90%] sm:w-[88%] md:w-[85%] lg:w-[80%] xl:w-[80%] mx-auto md:px-4 lg:px-6 xl:px-8 max-w-[1400px]">
+        <div className="w-[90%] sm:w-[88%] md:w-[85%] lg:w-[80%] xl:w-[80%] mx-auto md:px-4 lg:px-6 xl:px-8 max-w-[1400px] 2xl:max-w-[1560px] min-[120rem]:max-w-[1700px]">
           <SectionSeparators />
 
           
@@ -65,7 +65,7 @@ export default async function Home() {
         <FooterCTASectionSeparator />
 
         
-        <div className="w-[90%] sm:w-[88%] md:w-[85%] lg:w-[80%] xl:w-[80%] mx-auto md:px-4 lg:px-6 xl:px-8 max-w-[1400px]">
+        <div className="w-[90%] sm:w-[88%] md:w-[85%] lg:w-[80%] xl:w-[80%] mx-auto md:px-4 lg:px-6 xl:px-8 max-w-[1400px] 2xl:max-w-[1560px] min-[120rem]:max-w-[1700px]">
           <Footer />
         </div>
       </ScrollArea>

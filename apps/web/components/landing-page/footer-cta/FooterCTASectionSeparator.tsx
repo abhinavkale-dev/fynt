@@ -8,7 +8,7 @@ export function FooterCTASectionSeparator() {
         <div className="w-full h-px bg-white/20"/>
 
         
-        <div className="absolute inset-0 w-[80%] mx-auto">
+        <div className="absolute inset-0 w-[80%] max-w-[1920px] mx-auto">
           <div className="absolute left-2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
             <NodeSvg />
           </div>

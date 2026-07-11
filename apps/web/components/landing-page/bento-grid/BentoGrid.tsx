@@ -19,15 +19,15 @@ function BentoShell({ children, outerRadius, midRadius, innerRadius, }: BentoShe
     </div>);
 }
 export function BentoGrid() {
-    return (<div className="relative z-10 w-full max-w-[1200px] xl:max-w-[1240px] mx-auto px-2 sm:px-3 md:px-4 lg:px-0">
-      <div className="grid items-start grid-cols-1 lg:grid-cols-[1.12fr_1fr_1.12fr] xl:grid-cols-[1.1fr_1fr_1.1fr] gap-4 md:gap-5 lg:gap-3 xl:gap-4">
+    return (<div className="relative z-10 w-full max-w-[1200px] xl:max-w-[1240px] 2xl:max-w-[1400px] min-[120rem]:max-w-[1520px] mx-auto px-2 sm:px-3 md:px-4 lg:px-0">
+      <div className="grid items-start grid-cols-1 lg:grid-cols-[1.12fr_1fr_1.12fr] xl:grid-cols-[1.1fr_1fr_1.1fr] gap-4 md:gap-5 lg:gap-3 xl:gap-4 2xl:gap-5">
         
         <BentoShell outerRadius="rounded-[32px] sm:rounded-[36px] lg:rounded-[42px] xl:rounded-[50px]" midRadius="rounded-[29px] sm:rounded-[33px] lg:rounded-[39px] xl:rounded-[47px]" innerRadius="rounded-[26px] sm:rounded-[30px] lg:rounded-[36px] xl:rounded-[44px]">
           <F1Integrations />
         </BentoShell>
 
         
-        <div className="flex flex-col gap-4 md:gap-5 lg:gap-3 xl:gap-4">
+        <div className="flex flex-col gap-4 md:gap-5 lg:gap-3 xl:gap-4 2xl:gap-5">
           <BentoShell outerRadius="rounded-[32px] sm:rounded-[36px] lg:rounded-[42px] xl:rounded-[50px]" midRadius="rounded-[29px] sm:rounded-[33px] lg:rounded-[39px] xl:rounded-[47px]" innerRadius="rounded-[26px] sm:rounded-[30px] lg:rounded-[36px] xl:rounded-[44px]">
             <F2WorkflowRunning />
           </BentoShell>

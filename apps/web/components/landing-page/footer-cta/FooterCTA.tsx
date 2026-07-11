@@ -3,8 +3,8 @@ export function FooterCTA() {
     return (<>
       
       <section className="relative py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="relative rounded-3xl bg-gradient-to-br from-[#F04D26] to-[#E63D00] p-8 md:p-12 lg:p-16 overflow-hidden">
+        <div className="mx-auto max-w-5xl 2xl:max-w-6xl px-6">
+          <div className="relative rounded-3xl bg-gradient-to-br from-[#F04D26] to-[#E63D00] p-8 md:p-12 lg:p-16 2xl:p-20 overflow-hidden">
             
             <div className="absolute inset-0 z-0" style={{
             backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0, 0, 0, 0.1) 2px, rgba(0, 0, 0, 0.1) 4px)",

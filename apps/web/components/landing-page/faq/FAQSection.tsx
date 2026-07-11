@@ -37,7 +37,7 @@ export function FAQSection() {
         setOpenIndex(openIndex === index ? null : index);
     };
     return (<section id="faq" className="relative bg-[#151515] py-16 md:py-24">
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-5xl 2xl:max-w-6xl px-6">
         <div className="flex flex-col gap-12 xl:flex-row xl:gap-16">
           
           <div className="flex shrink-0 flex-col xl:w-[368px]">

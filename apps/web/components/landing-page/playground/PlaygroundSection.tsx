@@ -124,6 +124,15 @@ export function PlaygroundSection() {
         nodeType: string;
     } | null>(null);
     const executionTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+    // This component is client-only (ssr: false), so matchMedia is safe in the initializer.
+    const [isWideScreen, setIsWideScreen] = useState(() => window.matchMedia("(min-width: 1536px)").matches);
+    useEffect(() => {
+        const mq = window.matchMedia("(min-width: 1536px)");
+        const handler = (e: MediaQueryListEvent) => setIsWideScreen(e.matches);
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
+    const canvasZoom = isWideScreen ? 0.9 : 0.72;
     const onConnect: OnConnect = useCallback((connection) => {
         setEdges((currentEdges) => addEdge(connection, currentEdges));
     }, [setEdges]);
@@ -309,7 +318,7 @@ export function PlaygroundSection() {
           <span>Playground</span>
         </div>
 
-        <h2 className="font-serif italic text-[#7D7D87] text-center font-normal text-xl md:text-2xl leading-tight mb-12">
+        <h2 className="font-serif italic text-[#7D7D87] text-center font-normal text-xl md:text-2xl 2xl:text-3xl leading-tight mb-12">
           See how it all comes together
         </h2>
 
@@ -351,9 +360,9 @@ export function PlaygroundSection() {
           </div>
 
           <div className="p-2.5">
-            <div className="w-full h-[700px] rounded-2xl overflow-hidden relative" style={{ boxShadow: "rgba(0, 0, 0, 0.04) 0px 0.75px 0.75px inset" }}>
+            <div className="w-full h-[700px] 2xl:h-[820px] min-[120rem]:h-[900px] rounded-2xl overflow-hidden relative" style={{ boxShadow: "rgba(0, 0, 0, 0.04) 0px 0.75px 0.75px inset" }}>
               <EditorProvider onUpdateNodeData={updateNodeData} onDeleteNode={deleteNode} getNodeData={getNodeData} nodeStatuses={nodeStatuses} onExecuteNode={handleExecuteNodeDemo} onExecuteWorkflow={handleExecuteWorkflowDemo} onOpenNodeConfig={handleOpenNodeConfig} canEditNodes={true}>
-                <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} fitView fitViewOptions={{ padding: 0.22 }} defaultViewport={{ x: 0, y: 0, zoom: 0.72 }} nodesDraggable elementsSelectable preventScrolling={false} panOnDrag={false} panOnScroll={false} minZoom={0.72} maxZoom={0.72} zoomOnScroll={false} zoomOnPinch={false} zoomOnDoubleClick={false} proOptions={{ hideAttribution: true }} defaultEdgeOptions={{ type: "default" }} style={{ background: "#141414" }}>
+                <ReactFlow key={canvasZoom} nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} fitView fitViewOptions={{ padding: 0.22 }} defaultViewport={{ x: 0, y: 0, zoom: canvasZoom }} nodesDraggable elementsSelectable preventScrolling={false} panOnDrag={false} panOnScroll={false} minZoom={canvasZoom} maxZoom={canvasZoom} zoomOnScroll={false} zoomOnPinch={false} zoomOnDoubleClick={false} proOptions={{ hideAttribution: true }} defaultEdgeOptions={{ type: "default" }} style={{ background: "#141414" }}>
                   <Panel position="bottom-center" className="mb-8">
                     <ExecuteWorkflowButton onExecute={handleExecuteWorkflowDemo} isExecuting={isExecuting} disabled={isExecuting || !isTriggerActive}/>
                   </Panel>

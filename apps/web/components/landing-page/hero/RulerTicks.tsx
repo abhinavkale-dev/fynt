@@ -1,5 +1,5 @@
 export function RulerTicks() {
-    return (<div className="absolute inset-0 w-[80%] mx-auto pointer-events-none hidden lg:block z-10" aria-hidden="true">
+    return (<div className="absolute inset-0 w-[80%] max-w-[1920px] mx-auto pointer-events-none hidden lg:block z-10" aria-hidden="true">
             
             <div className="ruler-ticks absolute left-2 top-[40px] -translate-x-[calc(100%-1px)] pr-0 flex flex-col items-end gap-10 text-xs font-mono origin-right">
                 <div className="flex w-fit items-center gap-2 text-white/30"><span className="-rotate-90">0</span><span className="w-1 h-px bg-white/30"/></div>

@@ -211,7 +211,7 @@ export function TemplatesSection() {
     return (<>
     
     <div className="hidden md:flex justify-center bg-[#151515]">
-      <svg width="709" height="60" viewBox="0 0 709 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="709" height="60" viewBox="0 0 709 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="2xl:scale-125">
         <path d="M3 54v-8c0-8.837 7.163-16 16-16h318c8.837 0 16-7.163 16-16V6m0 30v16m350 2v-8c0-8.837-7.163-16-16-16H369c-8.837 0-16-7.163-16-16V6" stroke="#666"/>
         <rect x="350" width="6" height="6" rx="1" fill="#f04d26"/>
         <rect x="350" y="52" width="6" height="6" rx="1" fill="#f04d26"/>
@@ -226,7 +226,7 @@ export function TemplatesSection() {
     <svg aria-hidden="true" width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g><path d="M5.63803 19.673L6.09202 18.782H6.09202L5.63803 19.673ZM4.32698 18.362L3.43597 18.816H3.43597L4.32698 18.362ZM19.673 18.362L18.782 17.908V17.908L19.673 18.362ZM18.362 19.673L17.908 18.782H17.908L18.362 19.673ZM19.673 5.63803L18.782 6.09202V6.09202L19.673 5.63803ZM18.362 4.32698L18.816 3.43597V3.43597L18.362 4.32698ZM4.32698 5.63803L5.21799 6.09202V6.09202L4.32698 5.63803ZM5.63803 4.32698L6.09202 5.21799V5.21799L5.63803 4.32698ZM20 8.8H19V15.2H20H21V8.8H20ZM15.2 20V19H8.8V20V21H15.2V20ZM4 15.2H5V8.8H4H3V15.2H4ZM8.8 4V5H15.2V4V3H8.8V4ZM8.8 20V19C7.94342 19 7.36113 18.9992 6.91104 18.9624C6.47262 18.9266 6.24842 18.8617 6.09202 18.782L5.63803 19.673L5.18404 20.564C5.66937 20.8113 6.18608 20.9099 6.74817 20.9558C7.2986 21.0008 7.97642 21 8.8 21V20ZM4 15.2H3C3 16.0236 2.99922 16.7014 3.04419 17.2518C3.09012 17.8139 3.18868 18.3306 3.43597 18.816L4.32698 18.362L5.21799 17.908C5.1383 17.7516 5.07337 17.5274 5.03755 17.089C5.00078 16.6389 5 16.0566 5 15.2H4ZM5.63803 19.673L6.09202 18.782C5.7157 18.5903 5.40973 18.2843 5.21799 17.908L4.32698 18.362L3.43597 18.816C3.81947 19.5686 4.43139 20.1805 5.18404 20.564L5.63803 19.673ZM20 15.2H19C19 16.0566 18.9992 16.6389 18.9624 17.089C18.9266 17.5274 18.8617 17.7516 18.782 17.908L19.673 18.362L20.564 18.816C20.8113 18.3306 20.9099 17.8139 20.9558 17.2518C21.0008 16.7014 21 16.0236 21 15.2H20ZM15.2 20V21C16.0236 21 16.7014 21.0008 17.2518 20.9558C17.8139 20.9099 18.3306 20.8113 18.816 20.564L18.362 19.673L17.908 18.782C17.7516 18.8617 17.5274 18.9266 17.089 18.9624C16.6389 18.9992 16.0566 19 15.2 19V20ZM19.673 18.362L18.782 17.908C18.5903 18.2843 18.2843 18.5903 17.908 18.782L18.362 19.673L18.816 20.564C19.5686 20.1805 20.1805 19.5686 20.564 18.816L19.673 18.362ZM20 8.8H21C21 7.97642 21.0008 7.2986 20.9558 6.74817C20.9099 6.18608 20.8113 5.66937 20.564 5.18404L19.673 5.63803L18.782 6.09202C18.8617 6.24842 18.9266 6.47262 18.9624 6.91104C18.9992 7.36113 19 7.94342 19 8.8H20ZM15.2 4V5C16.0566 5 16.6389 5.00078 17.089 5.03755C17.5274 5.07337 17.7516 5.1383 17.908 5.21799L18.362 4.32698L18.816 3.43597C18.3306 3.18868 17.8139 3.09012 17.2518 3.04419C16.7014 2.99922 16.0236 3 15.2 3V4ZM19.673 5.63803L20.564 5.18404C20.1805 4.43139 19.5686 3.81947 18.816 3.43597L18.362 4.32698L17.908 5.21799C18.2843 5.40973 18.5903 5.7157 18.782 6.09202L19.673 5.63803ZM4 8.8H5C5 7.94342 5.00078 7.36113 5.03755 6.91104C5.07337 6.47262 5.1383 6.24842 5.21799 6.09202L4.32698 5.63803L3.43597 5.18404C3.18868 5.66937 3.09012 6.18608 3.04419 6.74817C2.99922 7.2986 3 7.97642 3 8.8H4ZM8.8 4V3C7.97642 3 7.2986 2.99922 6.74817 3.04419C6.18608 3.09012 5.66937 3.18868 5.18404 3.43597L5.63803 4.32698L6.09202 5.21799C6.24842 5.1383 6.47262 5.07337 6.91104 5.03755C7.36113 5.00078 7.94342 5 8.8 5V4ZM4.32698 5.63803L5.21799 6.09202C5.40973 5.71569 5.71569 5.40973 6.09202 5.21799L5.63803 4.32698L5.18404 3.43597C4.43139 3.81947 3.81947 4.43139 3.43597 5.18404L4.32698 5.63803Z" fill="currentColor"></path><path d="M12 4V12V20" stroke="currentColor" strokeWidth="2" strokeLinecap="square"></path><path d="M12 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="square"></path></g></svg>
             <span>Sector-specific Templates</span>
           </motion.div>
-          <motion.h2 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.6 }} transition={shouldReduceMotion ? { duration: 0 } : { ...entranceTransition, delay: 0.06 }} className="mt-4 text-center text-pretty font-serif italic text-[#7D7D87] text-xl md:text-2xl leading-tight xl:whitespace-nowrap">
+          <motion.h2 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.6 }} transition={shouldReduceMotion ? { duration: 0 } : { ...entranceTransition, delay: 0.06 }} className="mt-4 text-center text-pretty font-serif italic text-[#7D7D87] text-xl md:text-2xl 2xl:text-3xl leading-tight xl:whitespace-nowrap">
             Ready-made user flows for apps
           </motion.h2>
         </div>
@@ -275,7 +275,7 @@ export function TemplatesSection() {
             ? { duration: 0 }
             : { duration: TAB_FADE.enterDuration, ease: TAB_FADE.enterEase }}>
               <div className="relative z-0 max-h-[85vh] overflow-hidden pb-20">
-                <div className="relative mx-auto grid w-full max-w-6xl justify-items-center pt-[7.25rem] [perspective:10000px]">
+                <div className="relative mx-auto grid w-full max-w-6xl 2xl:max-w-[1280px] justify-items-center pt-[7.25rem] [perspective:10000px]">
                   {selectedTemplate.pages.map((page, pageIndex) => {
             const Icon = page.icon;
             const index = pagePositionByIndex.get(pageIndex) ?? pageIndex;
@@ -366,7 +366,7 @@ export function TemplatesSection() {
     </section>
     
     <div className="hidden md:flex justify-center bg-[#151515]">
-      <svg width="709" height="60" viewBox="0 0 709 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="709" height="60" viewBox="0 0 709 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="2xl:scale-125">
         <path d="M705.5 6v8c0 8.837-7.163 16-16 16h-318c-8.837 0-16 7.163-16 16v8m0-30V8M5.5 6v8c0 8.837 7.163 16 16 16h318c8.837 0 16 7.163 16 16v8" stroke="#666"/>
         <rect x="358.5" y="60" width="6" height="6" rx="1" transform="rotate(-180 358.5 60)" fill="#f04d26"/>
         <rect x="358.5" y="8" width="6" height="6" rx="1" transform="rotate(-180 358.5 8)" fill="#f04d26"/>

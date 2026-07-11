@@ -39,7 +39,7 @@ export function SectionSeparators() {
                     <NodeSvg />
                 </div>
                 
-                <div className="relative w-56 h-px bg-white/30"/>
+                <div className="relative w-56 2xl:w-80 h-px bg-white/30"/>
                 
                 <div className="flex-shrink-0 mr-2">
                     <NodeSvg />
@@ -53,7 +53,7 @@ export function SectionSeparators() {
                     <NodeSvg />
                 </div>
                 
-                <div className="relative w-56 h-px bg-white/30"/>
+                <div className="relative w-56 2xl:w-80 h-px bg-white/30"/>
                 
                 <div className="flex-shrink-0">
                     <NodeSvg />

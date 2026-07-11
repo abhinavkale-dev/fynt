@@ -13,7 +13,7 @@ export function PricingSection() {
     };
     return (<>
       <section id="pricing" className="relative bg-[#151515] py-12 sm:py-16 md:py-20 lg:py-24 xl:py-28">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-5xl 2xl:max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="font-serif italic text-balance text-2xl sm:text-3xl font-bold text-white md:text-4xl lg:text-5xl lg:tracking-tight">
               Pricing that scale with your business

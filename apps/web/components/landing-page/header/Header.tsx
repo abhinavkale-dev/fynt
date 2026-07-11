@@ -30,7 +30,7 @@ export default function Header() {
             <div className="relative z-20 flex w-full items-center justify-center gap-6 lg:gap-8 px-4 lg:px-0">
 
                 
-                <div className="absolute inset-0 w-[80%] mx-auto pointer-events-none hidden lg:block">
+                <div className="absolute inset-0 w-[80%] max-w-[1920px] mx-auto pointer-events-none hidden lg:block">
                     <div className="absolute left-2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
                         <NodeSvg />
                     </div>

@@ -1,6 +1,6 @@
 import { BentoGrid } from '../bento-grid';
 export function FeaturesSection() {
-    return (<section id="features" className="relative min-h-screen bg-[#151515] py-10 sm:py-12 md:py-14 lg:py-16 xl:py-20 snap-start flex flex-col justify-center">
+    return (<section id="features" className="relative min-h-screen bg-[#151515] py-10 sm:py-12 md:py-14 lg:py-16 xl:py-20 2xl:py-24 snap-start flex flex-col justify-center">
             
             <div className="relative z-10 w-[92%] md:w-[88%] lg:w-[90%] mx-auto flex flex-col items-center gap-4 mb-8 sm:mb-10 md:mb-12">
                 <div className="flex h-8 items-center gap-2 rounded-[11px] border border-[#F04D26] bg-[#F04D26]/5 px-2.5 text-xs font-medium text-white/75 shadow-[0_8px_24px_-14px_rgba(0,0,0,0.6)]">
@@ -13,7 +13,7 @@ export function FeaturesSection() {
                     </svg>
                     <span>Features</span>
                 </div>
-                <h2 className="font-serif italic text-[#7D7D87] text-center font-normal text-xl md:text-2xl leading-tight">
+                <h2 className="font-serif italic text-[#7D7D87] text-center font-normal text-xl md:text-2xl 2xl:text-3xl leading-tight">
                     Everything you need to build powerful workflows
                 </h2>
             </div>
