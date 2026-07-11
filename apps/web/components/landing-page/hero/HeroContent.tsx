@@ -2,7 +2,7 @@ import { HeroAnimation } from './HeroAnimation';
 import ShinyText from '@/components/ui/ShinyText';
 export function HeroContent({ stars }: { stars?: string | null }) {
     return (<div className="relative z-10 mx-auto w-full sm:w-[88%] md:w-[85%] lg:w-[80%] xl:w-[80%] max-w-[1920px] md:overflow-x-hidden overflow-y-visible min-[120rem]:overflow-visible px-4 sm:px-4 md:px-5 lg:px-6 xl:px-8 2xl:px-10 min-[97.5rem]:px-12">
-            <div className="grid md:grid-cols-2 gap-6 sm:gap-7 md:gap-8 lg:gap-10 xl:gap-12 2xl:gap-16 min-[97.5rem]:gap-20 items-start md:min-h-[560px] lg:min-h-[660px] xl:min-h-[760px] min-[120rem]:min-h-[860px]">
+            <div className="grid md:grid-cols-2 gap-6 sm:gap-7 md:gap-8 lg:gap-10 xl:gap-12 2xl:gap-16 min-[97.5rem]:gap-20 items-start md:min-h-[380px] lg:min-h-[470px] xl:min-h-[760px] min-[120rem]:min-h-[860px]">
                 <div className="md:pl-2 lg:pl-7 xl:pl-3 2xl:pl-13 min-[97.5rem]:pl-15 min-[120rem]:pl-17 lg:pr-6 xl:pr-8">
                     
                     <div className="text-center md:text-left mt-0 sm:mt-2 md:mt-0 lg:mt-7 xl:mt-8 2xl:mt-9">
@@ -56,7 +56,10 @@ export function HeroContent({ stars }: { stars?: string | null }) {
 
                 
                 <div className="relative hidden md:block perspective-[2000px] -mt-4 md:-mt-4 lg:-mt-6.5 md:ml-0 xl:ml-14 min-[97.5rem]:ml-0 z-10">
-                    <HeroAnimation className="scale-[0.36] md:scale-[0.36] lg:scale-[0.4] xl:scale-[0.7] min-[97.5rem]:scale-[0.71] origin-top-left"/>
+                    {/* Absolute wrapper keeps the unscaled animation's layout box from stretching the grid row */}
+                    <div className="absolute inset-0">
+                        <HeroAnimation className="scale-[0.36] md:scale-[0.36] lg:scale-[0.4] xl:scale-[0.7] min-[97.5rem]:scale-[0.71] min-[120rem]:scale-[0.8] origin-top xl:origin-top-left"/>
+                    </div>
                 </div>
             </div>
         </div>);
