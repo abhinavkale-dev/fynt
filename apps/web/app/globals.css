@@ -49,6 +49,12 @@
 }
 
 
+[data-slot="scroll-area-viewport"] > div {
+  display: block !important;
+  min-width: 0 !important;
+  width: 100%;
+}
+
 html {
   scroll-behavior: smooth;
   background: #151515;

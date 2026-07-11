@@ -275,7 +275,7 @@ export function TemplatesSection() {
             ? { duration: 0 }
             : { duration: TAB_FADE.enterDuration, ease: TAB_FADE.enterEase }}>
               <div className="relative z-0 max-h-[85vh] overflow-hidden pb-20">
-                <div className="relative mx-auto grid w-full max-w-6xl 2xl:max-w-[1280px] justify-items-center pt-[7.25rem] [perspective:10000px]">
+                <div className="relative mx-auto grid w-full max-w-6xl 2xl:max-w-[1280px] grid-cols-[minmax(0,1fr)] justify-items-center pt-[7.25rem] [perspective:10000px]">
                   {selectedTemplate.pages.map((page, pageIndex) => {
             const Icon = page.icon;
             const index = pagePositionByIndex.get(pageIndex) ?? pageIndex;
