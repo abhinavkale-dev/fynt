@@ -9,17 +9,16 @@
 Watch the product demo on X:
 [https://x.com/Abhinavstwt/status/2025449306564821163?s=20](https://x.com/Abhinavstwt/status/2025449306564821163?s=20)
 
-
 ## What is Fynt?
 
 Fynt is a self-hostable workflow automation platform. You drag nodes onto a canvas, wire them together, and let the engine execute them. Runs are distributed through a job queue, streamed live to the browser over WebSockets, and all credentials are encrypted at rest.
 
 **What you can build:**
+
 - AI pipelines that chain OpenAI, Anthropic, and Gemini calls
 - GitHub webhooks that post summaries to Slack or Discord
 - Scheduled data syncs between Notion, HTTP APIs, and your database
 - Multi-step conditional automations with branching and filtering
-
 
 ## Architecture
 
@@ -27,17 +26,15 @@ Visual system design:
 
 ![Fynt System Design](./apps/web/public/system-design-fynt.png)
 
-
 ## Node Types
 
-| Category | Nodes |
-|----------|-------|
-| **Triggers** | Manual, Webhook, Cron |
-| **AI** | OpenAI, Anthropic, Gemini |
+| Category         | Nodes                                        |
+| ---------------- | -------------------------------------------- |
+| **Triggers**     | Manual, Webhook, Cron                        |
+| **AI**           | OpenAI, Anthropic, Gemini                    |
 | **Integrations** | HTTP Request, GitHub, Notion, Slack, Discord |
-| **Logic** | Condition, Filter |
-| **Utilities** | Transform, Delay, Log |
-
+| **Logic**        | Condition, Filter                            |
+| **Utilities**    | Transform, Delay, Log                        |
 
 ## Monorepo Layout
 
@@ -53,12 +50,11 @@ fynt/
     eslint-config/ Shared ESLint rules
 ```
 
-
 ## Deployment Modes
 
-| Mode | Deploy | Use when |
-|------|--------|----------|
-| Web only | `apps/web` | You want to show the UI only and do not want to run worker and realtime services |
+| Mode           | Deploy                                       | Use when                                                                                     |
+| -------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Web only       | `apps/web`                                   | You want to show the UI only and do not want to run worker and realtime services             |
 | Full self-host | `apps/web` + `apps/worker` + `apps/realtime` | You want real workflow execution, cron scheduling, webhook ingestion, and live run streaming |
 
 ## Docker Full Self-Host (Recommended)
@@ -72,6 +68,7 @@ docker compose up --build
 ```
 
 Services:
+
 - Web: `http://localhost:3000`
 - Realtime health: `http://localhost:3101/health`
 - Postgres: `localhost:55432` (default; configurable via `FYNT_POSTGRES_PORT`)
@@ -91,6 +88,7 @@ docker compose logs -f web worker realtime bootstrap
 ```
 
 Notes:
+
 - This Docker stack runs **full self-host mode** (`FYNT_RUNTIME_MODE=full`) with automation enabled.
 - Web-only mode is still available outside Docker.
 - Docker stack reads `.env.docker`; `apps/web/.env` is not required for Docker runtime.
@@ -191,7 +189,6 @@ NEXT_PUBLIC_FYNT_RUNTIME_MODE=full
 FYNT_ENABLE_AUTOMATION_IN_PRODUCTION=true
 ```
 
-
 ## Development Commands
 
 ```sh
@@ -214,7 +211,6 @@ pnpm db:generate   # regenerate Prisma client
 pnpm db:push       # push schema without migrations
 pnpm db:seed       # seed with sample data
 ```
-
 
 ## Tech Stack
 

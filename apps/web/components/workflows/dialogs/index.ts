@@ -1,1 +1,1 @@
-export { NodeConfigDialog } from './NodeConfigDialog';
+export { NodeConfigDialog } from "./NodeConfigDialog";

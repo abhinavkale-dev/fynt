@@ -4,7 +4,6 @@
 
 This is the main product app. If you are changing anything user-facing, this is where you start.
 
-
 ## What lives here
 
 - App Router pages and API routes
@@ -13,7 +12,6 @@ This is the main product app. If you are changing anything user-facing, this is 
 - Template catalog and preflight logic
 - Live execution streaming hooks and WebSocket client
 - Auth setup via better-auth
-
 
 ## Folder map
 
@@ -57,7 +55,6 @@ lib/
   prisma.ts             Prisma client instance
 ```
 
-
 ## How data flows
 
 ### Workflow execution
@@ -75,16 +72,14 @@ lib/
 2. `lib/templates/catalog.ts` and `lib/templates/instantiate.ts` build runtime workflow JSON.
 3. `components/templates/TemplatePreflightModal.tsx` checks required credentials before creating the workflow.
 
-
 ## Common edit tasks
 
-| Task | Files to touch |
-|------|---------------|
-| Add or change a node UI | `components/workflows/nodes/`, `components/workflows/config/`, `lib/nodeUI.ts` |
-| Add or change a template | `lib/templates/catalog-data/`, `lib/templates/instantiate.ts` |
-| Change credential behavior | `server/routers/credentials.ts` |
+| Task                       | Files to touch                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------- |
+| Add or change a node UI    | `components/workflows/nodes/`, `components/workflows/config/`, `lib/nodeUI.ts`    |
+| Add or change a template   | `lib/templates/catalog-data/`, `lib/templates/instantiate.ts`                     |
+| Change credential behavior | `server/routers/credentials.ts`                                                   |
 | Change execution streaming | `lib/executions/executionSocketClient.ts`, `lib/executions/useExecutionSocket.ts` |
-
 
 ## Run modes
 
@@ -125,6 +120,7 @@ docker compose down -v
 ```
 
 Notes:
+
 - Docker full stack runs in `FYNT_RUNTIME_MODE=full` with automation enabled.
 - Web-only mode is separate and does not require worker/realtime.
 - For Docker runtime, use `.env.docker` at repo root (no `apps/web/.env` required).
@@ -144,33 +140,33 @@ pnpm --filter @fynt/web lint
 
 Required for any deploy:
 
-| Variable | Purpose |
-|----------|---------|
-| `DATABASE_URL` | Postgres connection for Prisma |
-| `ENCRYPTION_KEY` | Encrypt and decrypt stored credentials. Must match worker in full mode |
-| `BETTER_AUTH_SECRET` | Auth signing secret |
-| `BETTER_AUTH_URL` | Auth base URL |
-| `FYNT_RUNTIME_MODE` | Runtime behavior for server routes (`web-only` or `full`) |
-| `NEXT_PUBLIC_FYNT_RUNTIME_MODE` | Runtime behavior for execute UX in browser (`web-only` or `full`) |
+| Variable                        | Purpose                                                                |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`                  | Postgres connection for Prisma                                         |
+| `ENCRYPTION_KEY`                | Encrypt and decrypt stored credentials. Must match worker in full mode |
+| `BETTER_AUTH_SECRET`            | Auth signing secret                                                    |
+| `BETTER_AUTH_URL`               | Auth base URL                                                          |
+| `FYNT_RUNTIME_MODE`             | Runtime behavior for server routes (`web-only` or `full`)              |
+| `NEXT_PUBLIC_FYNT_RUNTIME_MODE` | Runtime behavior for execute UX in browser (`web-only` or `full`)      |
 
 Used in full self-host mode:
 
-| Variable | Purpose |
-|----------|---------|
-| `REDIS_URL` | Preferred Redis connection string (supports Upstash) |
-| `REDIS_HOST` + `REDIS_PORT` | Redis host/port if not using `REDIS_URL` |
-| `NEXT_PUBLIC_EXECUTION_WS_URL` | Browser WebSocket URL for realtime run events |
-| `EXECUTION_WS_URL` | Server-side WebSocket base URL used by ws-token route |
-| `EXECUTION_STREAM_SIGNING_SECRET` | Optional dedicated stream token signing secret |
-| `REALTIME_PORT` | Fallback port used when WS URL is not explicitly set |
+| Variable                          | Purpose                                               |
+| --------------------------------- | ----------------------------------------------------- |
+| `REDIS_URL`                       | Preferred Redis connection string (supports Upstash)  |
+| `REDIS_HOST` + `REDIS_PORT`       | Redis host/port if not using `REDIS_URL`              |
+| `NEXT_PUBLIC_EXECUTION_WS_URL`    | Browser WebSocket URL for realtime run events         |
+| `EXECUTION_WS_URL`                | Server-side WebSocket base URL used by ws-token route |
+| `EXECUTION_STREAM_SIGNING_SECRET` | Optional dedicated stream token signing secret        |
+| `REALTIME_PORT`                   | Fallback port used when WS URL is not explicitly set  |
 
 Optional:
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_BETTER_AUTH_URL` | Client-side auth URL |
-| `NEXT_PUBLIC_APP_URL` | Canonical app URL shown in webhook config |
-| `NGROK_URL` | Trusted origin for local tunnel during development |
+| Variable                      | Purpose                                            |
+| ----------------------------- | -------------------------------------------------- |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | Client-side auth URL                               |
+| `NEXT_PUBLIC_APP_URL`         | Canonical app URL shown in webhook config          |
+| `NGROK_URL`                   | Trusted origin for local tunnel during development |
 
 ### Production automation switch
 

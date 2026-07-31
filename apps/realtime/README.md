@@ -6,7 +6,6 @@ This service does not run workflow logic. It only forwards events.
 
 Use this service only in full self-host mode. For web-only frontend deployment, you can skip this app.
 
-
 ## What lives here
 
 - HTTP server with a `/health` endpoint
@@ -14,7 +13,6 @@ Use this service only in full self-host mode. For web-only frontend deployment, 
 - Token verification using a shared signing secret
 - Redis Pub/Sub subscription per connected run
 - Ping/pong heartbeat, idle timeout, and token expiry handling
-
 
 ## Folder map
 
@@ -25,7 +23,6 @@ src/
 
 dist/         Compiled JS output
 ```
-
 
 ## Connection lifecycle
 
@@ -40,15 +37,13 @@ dist/         Compiled JS output
    - The idle timeout fires (2 minutes without activity)
    - The heartbeat fails (25-second ping interval)
 
-
 ## Common edit tasks
 
-| Task | Files to touch |
-|------|---------------|
-| Change socket route, host binding, or close policy | `src/index.ts` |
-| Change token format or verification | `packages/shared/src/runtime/executionStreamToken.ts`, then `src/index.ts` |
-| Change event payload shape | Publisher side in worker and consumer side in web (realtime is a passthrough) |
-
+| Task                                               | Files to touch                                                                |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Change socket route, host binding, or close policy | `src/index.ts`                                                                |
+| Change token format or verification                | `packages/shared/src/runtime/executionStreamToken.ts`, then `src/index.ts`    |
+| Change event payload shape                         | Publisher side in worker and consumer side in web (realtime is a passthrough) |
 
 ## Commands
 
@@ -62,25 +57,23 @@ pnpm --filter @fynt/realtime start
 curl http://localhost:3101/health
 ```
 
-
 ## Environment variables
 
 Required (set in root `.env`):
 
-| Variable | Purpose |
-|----------|---------|
-| `BETTER_AUTH_SECRET` | Fallback signing secret if dedicated secret is not set |
-| `REDIS_URL` or `UPSTASH_REDIS_URL` | Preferred Redis connection string |
-| `REDIS_HOST` + `REDIS_PORT` | Redis host/port fallback if URL is not set |
+| Variable                           | Purpose                                                |
+| ---------------------------------- | ------------------------------------------------------ |
+| `BETTER_AUTH_SECRET`               | Fallback signing secret if dedicated secret is not set |
+| `REDIS_URL` or `UPSTASH_REDIS_URL` | Preferred Redis connection string                      |
+| `REDIS_HOST` + `REDIS_PORT`        | Redis host/port fallback if URL is not set             |
 
 Optional:
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
+| Variable                          | Default                            | Purpose                                  |
+| --------------------------------- | ---------------------------------- | ---------------------------------------- |
 | `EXECUTION_STREAM_SIGNING_SECRET` | falls back to `BETTER_AUTH_SECRET` | Dedicated WebSocket token signing secret |
-| `REALTIME_HOST` | `0.0.0.0` | Server bind address |
-| `REALTIME_PORT` | `3101` | Server port |
-
+| `REALTIME_HOST`                   | `0.0.0.0`                          | Server bind address                      |
+| `REALTIME_PORT`                   | `3101`                             | Server port                              |
 
 ## Troubleshooting
 

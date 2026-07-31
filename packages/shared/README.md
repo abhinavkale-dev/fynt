@@ -2,7 +2,6 @@
 
 **Runtime utilities, node registry, and security helpers shared across web, worker, and realtime.**
 
-
 ## What lives here
 
 - Node registry (single source of truth for all supported node types)
@@ -13,7 +12,6 @@
 - AES-256-GCM credential encryption and decryption
 - SSRF protection for outbound HTTP requests
 - Workflow graph parsing and validation
-
 
 ## Folder map
 
@@ -37,38 +35,35 @@ src/
     validation.ts         Workflow graph validation rules
 ```
 
-
 ## Key exports
 
-| Export | Used by | Purpose |
-|--------|---------|---------|
-| `nodeRegistry` | web, worker | All node types, categories, and metadata |
-| `redis` | web, worker, realtime | Shared Redis client |
-| `createRedisSubscriber` | realtime | Pub/Sub subscriber connection |
-| `withRedisFallback` | web, worker | Fallback wrapper when Redis is unavailable |
-| `getRedisConnectionOptions` | web, worker, realtime | Shared Redis connection options (`REDIS_URL` or host/port) |
-| `workflowQueue` | web, worker | BullMQ queue reference |
-| `signExecutionStreamToken` | web | Issue WebSocket auth tokens |
-| `verifyExecutionStreamToken` | realtime | Verify WebSocket auth tokens |
-| `encryptJson` / `decryptJson` | web, worker | Credential encryption |
-| `isSsrfSafeUrl` | worker | Validate outbound URLs in HTTP nodes |
-| `isAutomationDisabledInProduction` | web, worker | Production guard for webhook/cron automation |
-
+| Export                             | Used by               | Purpose                                                    |
+| ---------------------------------- | --------------------- | ---------------------------------------------------------- |
+| `nodeRegistry`                     | web, worker           | All node types, categories, and metadata                   |
+| `redis`                            | web, worker, realtime | Shared Redis client                                        |
+| `createRedisSubscriber`            | realtime              | Pub/Sub subscriber connection                              |
+| `withRedisFallback`                | web, worker           | Fallback wrapper when Redis is unavailable                 |
+| `getRedisConnectionOptions`        | web, worker, realtime | Shared Redis connection options (`REDIS_URL` or host/port) |
+| `workflowQueue`                    | web, worker           | BullMQ queue reference                                     |
+| `signExecutionStreamToken`         | web                   | Issue WebSocket auth tokens                                |
+| `verifyExecutionStreamToken`       | realtime              | Verify WebSocket auth tokens                               |
+| `encryptJson` / `decryptJson`      | web, worker           | Credential encryption                                      |
+| `isSsrfSafeUrl`                    | worker                | Validate outbound URLs in HTTP nodes                       |
+| `isAutomationDisabledInProduction` | web, worker           | Production guard for webhook/cron automation               |
 
 ## Environment variables
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `REDIS_URL` | unset | Preferred Redis connection string |
-| `UPSTASH_REDIS_URL` | unset | Alternative Redis URL alias |
-| `REDIS_HOST` | `localhost` | Redis host |
-| `REDIS_PORT` | `6379` | Redis port |
-| `ENCRYPTION_KEY` | required | 64-char hex key (32 bytes) for AES-256-GCM |
-| `RUN_RESERVATION_LOCK_TTL_SECONDS` | `10` | Lock TTL |
-| `RUN_RESERVATION_LOCK_WAIT_MS` | `1500` | Max wait time to acquire lock |
-| `RUN_RESERVATION_LOCK_RETRY_MS` | `40` | Retry interval while waiting |
-| `FYNT_ENABLE_AUTOMATION_IN_PRODUCTION` | `false` | Enables webhook and cron automation in production |
-
+| Variable                               | Default     | Purpose                                           |
+| -------------------------------------- | ----------- | ------------------------------------------------- |
+| `REDIS_URL`                            | unset       | Preferred Redis connection string                 |
+| `UPSTASH_REDIS_URL`                    | unset       | Alternative Redis URL alias                       |
+| `REDIS_HOST`                           | `localhost` | Redis host                                        |
+| `REDIS_PORT`                           | `6379`      | Redis port                                        |
+| `ENCRYPTION_KEY`                       | required    | 64-char hex key (32 bytes) for AES-256-GCM        |
+| `RUN_RESERVATION_LOCK_TTL_SECONDS`     | `10`        | Lock TTL                                          |
+| `RUN_RESERVATION_LOCK_WAIT_MS`         | `1500`      | Max wait time to acquire lock                     |
+| `RUN_RESERVATION_LOCK_RETRY_MS`        | `40`        | Retry interval while waiting                      |
+| `FYNT_ENABLE_AUTOMATION_IN_PRODUCTION` | `false`     | Enables webhook and cron automation in production |
 
 ## Notes
 

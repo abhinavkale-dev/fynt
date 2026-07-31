@@ -2,7 +2,6 @@
 
 **PostgreSQL schema, Prisma client, and database migrations for Fynt.**
 
-
 ## What lives here
 
 - Prisma schema defining all models
@@ -10,19 +9,17 @@
 - Generated Prisma client exported as `@repo/prisma`
 - Seed script for local development data
 
-
 ## Schema overview
 
-| Model | Purpose |
-|-------|---------|
-| `User` | Account with plan, run limits, and concurrency settings |
-| `Session` | better-auth session tokens |
-| `Account` | OAuth provider accounts with token storage |
-| `Workflow` | Node and edge graph stored as JSON, belongs to a user |
-| `WorkflowRun` | A single execution instance with status and metadata |
-| `NodeRun` | Per-node execution record with input, output, and timing |
-| `Credentials` | AES-256-GCM encrypted API keys, belongs to a user |
-
+| Model         | Purpose                                                  |
+| ------------- | -------------------------------------------------------- |
+| `User`        | Account with plan, run limits, and concurrency settings  |
+| `Session`     | better-auth session tokens                               |
+| `Account`     | OAuth provider accounts with token storage               |
+| `Workflow`    | Node and edge graph stored as JSON, belongs to a user    |
+| `WorkflowRun` | A single execution instance with status and metadata     |
+| `NodeRun`     | Per-node execution record with input, output, and timing |
+| `Credentials` | AES-256-GCM encrypted API keys, belongs to a user        |
 
 ## Folder map
 
@@ -33,7 +30,6 @@ src/
   index.ts            Prisma client export
   seed.ts             Development seed script
 ```
-
 
 ## Commands
 
@@ -51,15 +47,13 @@ pnpm --filter @repo/prisma exec prisma migrate dev --name your_migration_name
 pnpm db:seed
 ```
 
-
 ## Environment variables
 
-| Variable | Purpose |
-|----------|---------|
+| Variable       | Purpose                                           |
+| -------------- | ------------------------------------------------- |
 | `DATABASE_URL` | PostgreSQL connection string. Set in root `.env`. |
 
 Format: `postgresql://USER:PASSWORD@HOST:PORT/DBNAME`
-
 
 ## Notes
 

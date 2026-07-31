@@ -1,1 +1,1 @@
-export { WorkflowEdge } from './WorkflowEdge';
+export { WorkflowEdge } from "./WorkflowEdge";

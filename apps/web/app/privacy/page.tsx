@@ -1,15 +1,29 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-    title: "Privacy Policy - Fynt",
-    description: "Fynt Privacy Policy",
+  title: "Privacy Policy - Fynt",
+  description: "Fynt Privacy Policy",
 };
 export default function PrivacyPolicy() {
-    return (<main className="min-h-screen bg-[#151515] text-white">
+  return (
+    <main className="min-h-screen bg-[#151515] text-white">
       <div className="mx-auto max-w-3xl px-6 py-16 md:py-24">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors mb-12">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6"/>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors mb-12"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
           </svg>
           Back to Home
         </Link>
@@ -29,8 +43,8 @@ export default function PrivacyPolicy() {
             <p>
               Welcome to Fynt. We respect your privacy and are committed to
               protecting your personal data. This Privacy Policy explains how we
-              collect, use, disclose, and safeguard your information when you use
-              our workflow automation platform and related services.
+              collect, use, disclose, and safeguard your information when you
+              use our workflow automation platform and related services.
             </p>
           </section>
 
@@ -86,7 +100,9 @@ export default function PrivacyPolicy() {
                 To communicate with you about updates, security alerts, and
                 support.
               </li>
-              <li>To detect, prevent, and address technical issues or abuse.</li>
+              <li>
+                To detect, prevent, and address technical issues or abuse.
+              </li>
             </ul>
           </section>
 
@@ -163,8 +179,8 @@ export default function PrivacyPolicy() {
             <p>
               We use essential cookies to maintain your authentication session
               and preferences. We may also use analytics cookies to understand
-              how our platform is used. You can manage cookie preferences through
-              your browser settings.
+              how our platform is used. You can manage cookie preferences
+              through your browser settings.
             </p>
           </section>
 
@@ -174,8 +190,8 @@ export default function PrivacyPolicy() {
             </h2>
             <p>
               We may update this Privacy Policy from time to time. We will
-              notify you of any material changes by posting the updated policy on
-              this page and updating the &ldquo;Last updated&rdquo; date.
+              notify you of any material changes by posting the updated policy
+              on this page and updating the &ldquo;Last updated&rdquo; date.
             </p>
           </section>
 
@@ -186,7 +202,10 @@ export default function PrivacyPolicy() {
             <p>
               If you have any questions about this Privacy Policy, please
               contact us at{" "}
-              <a href="mailto:privacy@fynt.in" className="text-[#F04D26] hover:underline">
+              <a
+                href="mailto:privacy@fynt.in"
+                className="text-[#F04D26] hover:underline"
+              >
                 privacy@fynt.in
               </a>
               .
@@ -194,5 +213,6 @@ export default function PrivacyPolicy() {
           </section>
         </div>
       </div>
-    </main>);
+    </main>
+  );
 }

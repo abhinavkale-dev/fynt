@@ -64,7 +64,13 @@ services:
     ports:
       - "3101:3101"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3101/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3101/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10

@@ -1,15 +1,29 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-    title: "Terms of Service - Fynt",
-    description: "Fynt Terms of Service",
+  title: "Terms of Service - Fynt",
+  description: "Fynt Terms of Service",
 };
 export default function TermsOfService() {
-    return (<main className="min-h-screen bg-[#151515] text-white">
+  return (
+    <main className="min-h-screen bg-[#151515] text-white">
       <div className="mx-auto max-w-3xl px-6 py-16 md:py-24">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors mb-12">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6"/>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors mb-12"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
           </svg>
           Back to Home
         </Link>
@@ -41,9 +55,9 @@ export default function TermsOfService() {
             <p>
               Fynt provides a visual workflow automation platform that allows
               users to create, configure, and execute automated workflows
-              connecting various services and APIs. The Service includes workflow
-              building tools, execution engines, credential management, and
-              related features.
+              connecting various services and APIs. The Service includes
+              workflow building tools, execution engines, credential management,
+              and related features.
             </p>
           </section>
 
@@ -122,8 +136,8 @@ export default function TermsOfService() {
             <p>
               The Service allows you to connect with third-party services and
               APIs. Your use of these integrations is subject to the respective
-              third party&apos;s terms and policies. Fynt is not responsible
-              for the availability, accuracy, or practices of any third-party
+              third party&apos;s terms and policies. Fynt is not responsible for
+              the availability, accuracy, or practices of any third-party
               services.
             </p>
           </section>
@@ -136,8 +150,8 @@ export default function TermsOfService() {
               You are responsible for any credentials or API keys you store on
               the platform. While we encrypt and protect stored credentials, you
               should only store credentials with the minimum permissions
-              necessary for your workflows. Fynt is not liable for any
-              damages resulting from compromised third-party credentials.
+              necessary for your workflows. Fynt is not liable for any damages
+              resulting from compromised third-party credentials.
             </p>
           </section>
 
@@ -159,9 +173,9 @@ export default function TermsOfService() {
               9. Limitation of Liability
             </h2>
             <p>
-              To the maximum extent permitted by law, Fynt shall not be
-              liable for any indirect, incidental, special, consequential, or
-              punitive damages, including loss of profits, data, or business
+              To the maximum extent permitted by law, Fynt shall not be liable
+              for any indirect, incidental, special, consequential, or punitive
+              damages, including loss of profits, data, or business
               opportunities, arising from your use of the Service. Our total
               liability shall not exceed the amount you paid for the Service in
               the twelve months preceding the claim.
@@ -186,9 +200,9 @@ export default function TermsOfService() {
             </h2>
             <p>
               We may modify these Terms at any time. We will notify you of
-              material changes by posting updated Terms on this page and updating
-              the &ldquo;Last updated&rdquo; date. Continued use of the Service
-              after changes constitutes acceptance of the updated Terms.
+              material changes by posting updated Terms on this page and
+              updating the &ldquo;Last updated&rdquo; date. Continued use of the
+              Service after changes constitutes acceptance of the updated Terms.
             </p>
           </section>
 
@@ -198,7 +212,10 @@ export default function TermsOfService() {
             </h2>
             <p>
               If you have any questions about these Terms, please contact us at{" "}
-              <a href="mailto:legal@fynt.in" className="text-[#F04D26] hover:underline">
+              <a
+                href="mailto:legal@fynt.in"
+                className="text-[#F04D26] hover:underline"
+              >
                 legal@fynt.in
               </a>
               .
@@ -206,5 +223,6 @@ export default function TermsOfService() {
           </section>
         </div>
       </div>
-    </main>);
+    </main>
+  );
 }
