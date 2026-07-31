@@ -6,6 +6,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Pin pnpm to the version declared in package.json packageManager
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Install dependencies first using workspace manifests for better cache reuse.

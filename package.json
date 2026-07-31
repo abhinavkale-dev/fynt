@@ -8,6 +8,7 @@
     "start": "pnpm --filter @fynt/web start",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "db:generate": "pnpm --filter @repo/prisma generate",
     "db:push": "pnpm --filter @repo/prisma push",

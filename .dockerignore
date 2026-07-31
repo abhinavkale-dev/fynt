@@ -34,3 +34,9 @@ apps/realtime/.env
 # Tooling/editor
 .vscode
 .idea
+
+# Agent/AI tooling
+.claude
+.cursor
+.codex
+.cursorrules
