@@ -9,6 +9,7 @@ import type { MouseEvent as ReactMouseEvent } from "react";
 
 const GITHUB_URL = "https://github.com/abhinavkale-dev/fynt";
 const X_URL = "https://x.com/Abhinavstwt";
+const PIKOREELS_URL = "https://pikoreels.com";
 const PRIVACY_URL = "/privacy";
 const TERMS_URL = "/terms";
 
@@ -16,6 +17,7 @@ const normalizeFooterLink = (href: string) => href.replace(/\/+$/, "");
 const allowedFooterLinks = new Set([
   normalizeFooterLink(GITHUB_URL),
   normalizeFooterLink(X_URL),
+  normalizeFooterLink(PIKOREELS_URL),
   normalizeFooterLink(PRIVACY_URL),
   normalizeFooterLink(TERMS_URL),
 ]);
@@ -489,6 +491,16 @@ export function Footer() {
                       Careers
                     </a>
                   </li>
+                  <li>
+                    <a
+                      href={PIKOREELS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#F04D26] hover:text-[#ff6e00] text-sm transition-colors block"
+                    >
+                      pikoreels.com
+                    </a>
+                  </li>
                 </ul>
               </CollapsibleContent>
             </Collapsible>
@@ -694,6 +706,16 @@ export function Footer() {
                     className="text-white/60 hover:text-white text-sm transition-colors"
                   >
                     Careers
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={PIKOREELS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#F04D26] hover:text-[#ff6e00] text-sm transition-colors"
+                  >
+                    pikoreels.com
                   </a>
                 </li>
               </ul>
