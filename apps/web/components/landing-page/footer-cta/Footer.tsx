@@ -4,7 +4,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 
 const GITHUB_URL = "https://github.com/abhinavkale-dev/fynt";
@@ -496,9 +496,10 @@ export function Footer() {
                       href={PIKOREELS_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#F04D26] hover:text-[#ff6e00] text-sm transition-colors block"
+                      className="inline-flex items-center gap-1 text-[#F04D26] hover:text-[#ff6e00] text-sm transition-colors"
                     >
-                      pikoreels.com
+                      Pikoreels
+                      <ArrowUpRight className="h-3.5 w-3.5" />
                     </a>
                   </li>
                 </ul>
@@ -713,9 +714,10 @@ export function Footer() {
                     href={PIKOREELS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#F04D26] hover:text-[#ff6e00] text-sm transition-colors"
+                    className="inline-flex items-center gap-1 text-[#F04D26] hover:text-[#ff6e00] text-sm transition-colors"
                   >
-                    pikoreels.com
+                    Pikoreels
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                   </a>
                 </li>
               </ul>
