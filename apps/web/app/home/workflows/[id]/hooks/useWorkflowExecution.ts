@@ -342,7 +342,12 @@ export function useWorkflowExecution({
       }
       setIsPanelStreamConnected(false);
     };
-  }, [selectedPanelRunId, refetchRunDetail, refetchRuns]);
+  }, [
+    selectedPanelRunId,
+    panelEffectiveWorkflowStatus,
+    refetchRunDetail,
+    refetchRuns,
+  ]);
   useEffect(() => {
     setPanelLiveStatuses({});
     setPanelWorkflowStatus(null);

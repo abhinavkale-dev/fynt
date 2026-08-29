@@ -781,7 +781,10 @@ function ExecutionsPageContent() {
       enabled: selectedWorkflowId !== null,
     },
   );
-  const runs = data?.pages.flatMap((page) => page.runs) ?? [];
+  const runs = useMemo(
+    () => data?.pages.flatMap((page) => page.runs) ?? [],
+    [data],
+  );
   useEffect(() => {
     if (!requestedRunId || preselectedRunIdRef.current === requestedRunId) {
       return;
