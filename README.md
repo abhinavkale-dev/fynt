@@ -222,3 +222,17 @@ pnpm db:seed       # seed with sample data
 - **Encryption** - AES-256-GCM for all stored credentials
 - **Monorepo** - Turborepo with pnpm workspaces
 - **Language** - TypeScript throughout
+
+## Sponsors
+
+<a href="https://vercel.com/open-source-program">
+  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge-2026.svg" />
+</a>
+
+---
+
+## Powered by Vercel
+
+<img src="https://github.com/user-attachments/assets/5bc3b368-d71a-48aa-b45f-67cbf49fe538" />
+
+---
