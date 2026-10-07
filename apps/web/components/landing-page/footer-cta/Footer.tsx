@@ -10,6 +10,7 @@ import type { MouseEvent as ReactMouseEvent } from "react";
 const GITHUB_URL = "https://github.com/abhinavkale-dev/fynt";
 const X_URL = "https://x.com/Abhinavstwt";
 const PIKOREELS_URL = "https://pikoreels.com";
+const VERCEL_OSS_URL = "https://vercel.com/open-source-program";
 const PRIVACY_URL = "/privacy";
 const TERMS_URL = "/terms";
 
@@ -18,6 +19,7 @@ const allowedFooterLinks = new Set([
   normalizeFooterLink(GITHUB_URL),
   normalizeFooterLink(X_URL),
   normalizeFooterLink(PIKOREELS_URL),
+  normalizeFooterLink(VERCEL_OSS_URL),
   normalizeFooterLink(PRIVACY_URL),
   normalizeFooterLink(TERMS_URL),
 ]);
@@ -270,6 +272,27 @@ export function Footer() {
               </svg>
             </a>
           </div>
+
+          <a
+            href={VERCEL_OSS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors"
+          >
+            Sponsored by
+            <span className="inline-flex items-center gap-1 font-semibold text-white">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 14"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-2.5 w-auto"
+              >
+                <path d="M8 0L16 14H0L8 0Z" />
+              </svg>
+              Vercel
+            </span>
+          </a>
         </div>
 
         <FooterSectionSeparator />
