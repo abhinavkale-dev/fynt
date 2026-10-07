@@ -6,6 +6,49 @@ export function HeroContent({ stars }: { stars?: string | null }) {
       <div className="grid md:grid-cols-2 gap-6 sm:gap-7 md:gap-8 lg:gap-10 xl:gap-12 2xl:gap-16 min-[97.5rem]:gap-20 items-start md:min-h-[380px] lg:min-h-[470px] xl:min-h-[760px] min-[120rem]:min-h-[860px]">
         <div className="md:pl-2 lg:pl-7 xl:pl-3 2xl:pl-13 min-[97.5rem]:pl-15 min-[120rem]:pl-17 lg:pr-6 xl:pr-8">
           <div className="text-center md:text-left mt-0 sm:mt-2 md:mt-0 lg:mt-7 xl:mt-8 2xl:mt-9">
+            <div className="mb-5 md:mb-6 inline-flex items-center gap-1.5 md:gap-2 whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 md:px-3.5 py-1 md:py-1.5 font-sans text-[11px] md:text-xs text-[#A1A1AA] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              {stars && (
+                <>
+                  <a
+                    href="https://github.com/abhinavkale-dev/fynt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ShinyText
+                      text={`${stars} Stars on GitHub`}
+                      speed={2}
+                      delay={1.8}
+                      color="#A1A1AA"
+                      shineColor="#FF6B45"
+                      spread={135}
+                    />
+                  </a>
+                  <span aria-hidden="true" className="text-white/30">
+                    •
+                  </span>
+                </>
+              )}
+              <a
+                href="https://vercel.com/open-source-program"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 transition-colors duration-150 ease hover:text-white motion-reduce:transition-none"
+              >
+                Sponsored by
+                <span className="inline-flex items-center gap-1 font-semibold text-white">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 14"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-[9px] w-auto md:h-2.5"
+                  >
+                    <path d="M8 0L16 14H0L8 0Z" />
+                  </svg>
+                  Vercel
+                </span>
+              </a>
+            </div>
             <h1 className="font-serif text-2xl sm:text-2xl md:text-[26px] lg:text-[40px] xl:text-[45px] min-[97.5rem]:text-[50px] leading-tight lg:leading-[1.08] tracking-tight text-white mb-6 md:mb-8">
               <span className="block 2xl:whitespace-nowrap">
                 Your workflows aren&apos;t linear.
@@ -70,36 +113,11 @@ export function HeroContent({ stars }: { stars?: string | null }) {
                   />
                 </svg>
               </a>
-              {stars && (
-                <div className="hidden md:block">
-                  <svg
-                    className="text-white/20 pointer-events-none absolute top-2 left-[105%] w-10 h-10 rotate-195"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 323.057 323.057"
-                    xmlSpace="preserve"
-                    fill="currentColor"
-                  >
-                    <path d="M281.442 256.312c-47.124 59.364-139.536 44.676-160.956-29.376-1.224-3.672-1.836-7.956-2.448-11.628 49.572-11.016 97.92-47.124 102.204-90.576 3.672-39.168-36.108-50.796-62.424-28.764-31.212 26.316-53.244 64.872-55.08 105.875-31.824 4.284-63.036-4.284-80.172-35.496-28.764-52.631 9.792-123.624 61.2-144.432 5.508-1.836 3.06-10.404-2.448-8.568C10.326 33.544-26.394 132.688 21.954 191.439c18.972 22.645 49.572 29.988 81.396 26.316 4.284 41.616 36.72 74.664 75.275 87.516 44.676 14.688 85.68-6.731 111.996-41.616 4.285-5.508-4.896-12.239-9.179-7.343M144.354 132.688c9.792-13.464 22.644-28.764 39.168-34.272 15.911-5.508 21.42 16.524 22.031 26.316.612 12.24-7.956 23.256-15.912 31.824-16.523 18.971-44.063 35.496-72.215 42.839 1.836-23.868 13.464-47.123 26.928-66.707" />
-                    <path d="M315.713 233.668c-17.136 0-34.884 1.224-51.408 5.508-6.731 1.836-3.672 11.016 3.061 9.792 13.464-2.448 27.54-1.836 41.004-1.224-.612 7.955-1.224 16.523-2.448 24.479-1.224 6.12-5.508 15.3-1.836 21.42 1.836 3.061 4.896 3.061 7.956 1.836 7.344-3.06 7.344-15.912 8.568-22.644 1.836-11.017 2.447-21.42 2.447-32.437 0-3.67-3.672-6.73-7.344-6.73" />
-                  </svg>
-                  <span className="font-mono pointer-events-none absolute top-12 left-[112%] -rotate-14 text-[10px] leading-tight whitespace-nowrap">
-                    <ShinyText
-                      text={`${stars} Stars`}
-                      speed={2}
-                      delay={1.8}
-                      color="#555555"
-                      shineColor="#FF6B45"
-                      spread={135}
-                    />{" "}
-                    <br /> <span className="text-white/20">on Github</span>
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
-        <div className="relative hidden md:block perspective-[2000px] -mt-4 md:-mt-4 lg:-mt-6.5 md:ml-0 xl:ml-14 min-[97.5rem]:ml-0 z-10">
+        <div className="relative hidden md:block perspective-[2000px] -mt-4 md:mt-9.5 lg:mt-7 md:ml-0 xl:ml-14 min-[97.5rem]:ml-0 z-10">
           {/* Absolute wrapper keeps the unscaled animation's layout box from stretching the grid row */}
           <div className="absolute inset-0">
             <HeroAnimation className="scale-[0.36] md:scale-[0.36] lg:scale-[0.4] xl:scale-[0.7] min-[97.5rem]:scale-[0.71] min-[120rem]:scale-[0.8] origin-top xl:origin-top-left" />
