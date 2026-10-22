@@ -71,6 +71,10 @@ fynt/
 | Web only       | `apps/web`                                   | You want to show the UI only and do not want to run worker and realtime services             |
 | Full self-host | `apps/web` + `apps/worker` + `apps/realtime` | You want real workflow execution, cron scheduling, webhook ingestion, and live run streaming |
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Fynt/)
+
 ## Docker Full Self-Host (Recommended)
 
 Run the full stack locally with one command:
